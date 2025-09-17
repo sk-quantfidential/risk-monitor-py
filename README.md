@@ -55,7 +55,7 @@ The Risk Monitor operates exactly like a real-world institutional risk system wi
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.13+
 - Docker and Docker Compose
 - Poetry (for dependency management)
 - Access to market data APIs
@@ -943,13 +943,13 @@ alert_configuration:
 
 ### Dockerfile
 ```dockerfile
-FROM python:3.11-slim as builder
+FROM python:3.13-slim as builder
 
 WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 RUN pip install poetry && poetry export -f requirements.txt --output requirements.txt
 
-FROM python:3.11-slim
+FROM python:3.13-slim
 WORKDIR /app
 
 # Install system dependencies for financial calculations
