@@ -11,10 +11,12 @@ The Risk Monitor operates exactly like a real-world institutional risk system wi
 - **Real-Time Risk Surveillance**: Continuous monitoring of positions, P&L, and exposures
 - **Compliance Alerting**: Automated detection and escalation of risk limit breaches
 - **Multi-Venue Aggregation**: Consolidated view across all trading venues and custody accounts
+- **Executive Dashboard**: Real-time risk visualization and portfolio health monitoring with historical reporting
+- **Risk Signal Generation**: Emits compliance status for correlation with ecosystem events
 - **Delta Risk Management**: Net underlying exposure tracking and hedging recommendations
 - **Drawdown Monitoring**: Real-time P&L tracking with circuit breaker capabilities
 - **Audit Trail**: Complete logging of all risk decisions and compliance signals
-- **Dashboard & Reporting**: Real-time risk dashboard with historical reporting
+- **Circuit Breaker Integration**: Emergency position liquidation coordination
 
 ## 🏗️ Architecture
 
@@ -22,31 +24,31 @@ The Risk Monitor operates exactly like a real-world institutional risk system wi
 ┌─────────────────────────────────────────────────────────┐
 │                   Risk Monitor                          │
 ├─────────────────────────────────────────────────────────┤
-│  External Data Sources (Production-Like Access)        │
-│  ├─Exchange APIs (Account balances, positions, orders) │
-│  ├─Custodian APIs (Master account balances, transfers) │
-│  ├─Market Data APIs (Real-time prices, volatility)     │
-│  └─Reference Data (Instrument specs, holidays, etc.)   │
+│  External Data Sources (Production-Like Access)         │
+│  ├─Exchange APIs (Account balances, positions, orders)  │
+│  ├─Custodian APIs (Master account balances, transfers)  │
+│  ├─Market Data APIs (Real-time prices, volatility)      │
+│  └─Reference Data (Instrument specs, holidays, etc.)    │
 ├─────────────────────────────────────────────────────────┤
 │  Risk Engine                                            │
-│  ├─Position Aggregator (Cross-venue position netting)  │
-│  ├─P&L Calculator (Real-time mark-to-market)           │
-│  ├─Delta Calculator (Net underlying exposure tracking) │
-│  ├─Limit Monitor (Compliance checking and alerting)    │
-│  ├─Drawdown Monitor (Portfolio loss tracking)          │
-│  └─Circuit Breaker (Emergency position management)     │
+│  ├─Position Aggregator (Cross-venue position netting)   │
+│  ├─P&L Calculator (Real-time mark-to-market)            │
+│  ├─Delta Calculator (Net underlying exposure tracking)  │
+│  ├─Limit Monitor (Compliance checking and alerting)     │
+│  ├─Drawdown Monitor (Peak-to-trough tracking)           │
+│  └─Circuit Breaker (Emergency position management)      │
 ├─────────────────────────────────────────────────────────┤
 │  Compliance & Alerting                                  │
-│  ├─Alert Manager (Risk breach detection and routing)   │
-│  ├─Escalation Engine (Multi-tier alerting workflows)   │
-│  ├─Compliance Reporter (Regulatory reporting)          │
-│  └─Audit Logger (Complete decision audit trail)        │
+│  ├─Alert Manager (Risk breach detection and routing)    │
+│  ├─Escalation Engine (Multi-tier alerting workflows)    │
+│  ├─Mandate Compliance (Reporting)                       │
+│  └─Audit Logger (Complete decision audit trail)         │
 ├─────────────────────────────────────────────────────────┤
 │  Dashboard & Analytics                                  │
 │  ├─Real-Time Dashboard (Live risk metrics visualization)│
-│  ├─Historical Reporting (Risk trend analysis)          │
-│  ├─Performance Attribution (Strategy-level analysis)   │
-│  └─Metrics Publisher (Prometheus compliance signals)   │
+│  ├─Historical Reporting (Risk trend analysis)           │
+│  ├─Performance Attribution (Strategy-level analysis)    │
+│  └─Risk Signal Publisher (Prometheus compliance)        │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -56,7 +58,7 @@ The Risk Monitor operates exactly like a real-world institutional risk system wi
 - Python 3.11+
 - Docker and Docker Compose
 - Poetry (for dependency management)
-- Access to exchange and custodian APIs
+- Access to market data APIs
 
 ### Development Setup
 ```bash
@@ -88,6 +90,9 @@ docker build -t risk-monitor .
 
 # Run with docker-compose (recommended)
 docker-compose up risk-monitor
+
+# Access dashboard
+open http://localhost:8080
 
 # Verify health and risk monitoring
 curl http://localhost:8080/health
@@ -157,6 +162,14 @@ GET    /debug/data-sources/status
 GET    /debug/risk-calculations
 GET    /debug/alert-processing-queue
 GET    /debug/compliance-engine-state
+GET    /metrics (Prometheus format)
+```
+
+### Health & Status APIs
+```
+GET    /health
+GET    /api/v1/system/status
+GET    /api/v1/data-sources/connectivity
 GET    /metrics (Prometheus format)
 ```
 
@@ -313,7 +326,78 @@ class DeltaRiskCalculator:
         return deltas
 ```
 
-## 🚨 Risk Monitoring & Alerting
+## 🚨 Compliance & Alerting System
+
+### Risk Limit Configuration
+```yaml
+# risk_limits.yaml
+risk_limits:
+  position_limits:
+    BTC-USD:
+      max_long_notional: 5000000    # $5M max long exposure
+      max_short_notional: 2500000   # $2.5M max short exposure
+      concentration_limit: 0.30     # Max 30% of portfolio
+      warn_at_utilization: 0.8
+  
+    ETH-USD:
+      max_long_notional: 3000000    # $3M max long exposure
+      max_short_notional: 1500000   # $1.5M max short exposure
+      concentration_limit: 0.25     # Max 25% of portfolio
+      warn_at_utilization: 0.8
+
+  portfolio_limits:
+    max_total_notional: 10000000    # $10M total exposure limit
+    max_daily_loss: 500000          # $500K max daily loss
+    max_drawdown_pct: 0.15          # 15% max drawdown from HWM
+    max_var_99: 750000              # $750K max 1-day VaR
+    max_leverage_ratio: 3.0         # 3:1 max leverage
+
+  notional_limits:
+    total_portfolio: 10000000  # $10M total notional
+    per_symbol: 2000000       # $2M per symbol
+    warn_at_utilization: 0.75
+
+  delta_limits:
+    BTC:
+      max_net_exposure: 15.0    # Max 15 BTC net exposure
+    ETH:
+      max_net_exposure: 250.0   # Max 250 ETH net exposure
+    USD:
+      max_net_exposure: 5000000 # Max $5M USD net exposure
+
+  drawdown_limits:
+    daily_loss: -500000        # Max $500k daily loss
+    max_drawdown: -0.15        # Max 15% drawdown from peak
+    trailing_stop_pct: 0.10    # 10% trailing stop
+
+  circuit_breakers:
+    portfolio_loss_threshold: -1000000  # $1M total loss
+    rapid_drawdown_threshold: -250000   # $250k in 10 minutes
+    critical_alert_threshold: 5         # 5 critical alerts
+    recovery_time_minutes: 60           # Circuit reset time
+
+  operational_limits:
+    position_staleness_minutes: 5   # Alert if position data >5min old
+    pnl_calculation_frequency: 30   # Calculate P&L every 30 seconds
+    alert_escalation_minutes: 10    # Escalate unacked alerts after 10min
+
+alert_configuration:
+  severity_thresholds:
+    low: 0.5      # 50% of limit utilization
+    medium: 0.75  # 75% of limit utilization
+    high: 0.90    # 90% of limit utilization
+    critical: 1.0 # Limit exceeded
+
+  escalation_rules:
+    high_severity:
+      initial_notification: ["risk_team"]
+      escalation_delay_minutes: 15
+      escalate_to: ["head_of_trading", "cro"]
+    critical_severity:
+      initial_notification: ["risk_team", "head_of_trading"]
+      escalation_delay_minutes: 5
+      escalate_to: ["ceo", "board"]
+```
 
 ### Risk Limit Monitoring
 ```python
@@ -541,6 +625,101 @@ dashboard:
     alert_at_utilization: 0.90
 ```
 
+### Portfolio Visualization
+```python
+def render_pnl_chart(self):
+    """Real-time P&L chart"""
+    st.subheader("P&L Timeline")
+    
+    pnl_history = self.risk_monitor.get_pnl_history(hours=24)
+    
+    fig = make_subplots(
+        rows=2, cols=1,
+        subplot_titles=('Total P&L', 'Daily P&L'),
+        vertical_spacing=0.1
+    )
+    
+    # Total P&L line
+    fig.add_trace(
+        go.Scatter(
+            x=pnl_history.timestamp,
+            y=pnl_history.total_pnl,
+            mode='lines',
+            name='Total P&L',
+            line=dict(color='blue', width=2)
+        ),
+        row=1, col=1
+    )
+    
+    # Daily P&L bar chart
+    fig.add_trace(
+        go.Bar(
+            x=pnl_history.timestamp,
+            y=pnl_history.daily_pnl,
+            name='Daily P&L',
+            marker_color=['red' if x < 0 else 'green' for x in pnl_history.daily_pnl]
+        ),
+        row=2, col=1
+    )
+    
+    fig.update_layout(height=500, showlegend=False)
+    st.plotly_chart(fig, use_container_width=True)
+```
+
+
+## 📊 Risk Signal Generation
+### Compliance Signal Emission
+```python
+class RiskSignalPublisher:
+    """Publishes risk compliance signals for audit correlation"""
+    
+    def __init__(self):
+        self.prometheus_client = PrometheusClient()
+        self.signal_history = []
+    
+    def emit_compliance_signal(self, alert: RiskAlert):
+        """Emit compliance signal for audit correlation"""
+        
+        signal = ComplianceSignal(
+            timestamp=datetime.utcnow(),
+            signal_type="risk_alert_generated",
+            severity=alert.severity,
+            alert_type=alert.alert_type,
+            current_value=alert.current_value,
+            limit_value=alert.limit_value,
+            breach_percentage=alert.breach_percentage,
+            affected_assets=alert.affected_assets
+        )
+        
+        # Publish to Prometheus for audit correlation
+        self.prometheus_client.increment_counter(
+            "risk_alert_generated_total",
+            labels={
+                "severity": alert.severity.value,
+                "alert_type": alert.alert_type,
+                "asset": ",".join(alert.affected_assets)
+            }
+        )
+        
+        # Emit structured log for audit trail
+        self.emit_compliance_log(signal)
+        
+        self.signal_history.append(signal)
+    
+    def emit_limit_compliance_status(self, risk_snapshot: RiskSnapshot):
+        """Emit regular compliance status signals"""
+        
+        for limit_name, compliance_status in risk_snapshot.compliance_status.items():
+            self.prometheus_client.set_gauge(
+                "risk_limit_utilization",
+                compliance_status.utilization_percentage,
+                labels={
+                    "limit_type": limit_name,
+                    "status": compliance_status.status
+                }
+            )
+```
+
 ## 📊 Monitoring & Observability
 
 ### Prometheus Metrics (Compliance Signals)
@@ -658,6 +837,52 @@ AUDIT_LOG_RETENTION_DAYS=365
 REGULATORY_REPORTING_ENABLED=true
 ```
 
+### Risk Monitor Configuration
+```yaml
+# risk_monitor_config.yaml
+monitoring:
+  calculation_frequency_seconds: 30
+  position_staleness_threshold_minutes: 5
+  pnl_precision_decimals: 8
+  
+external_apis:
+  exchanges:
+    - name: "exchange-simulator-1"
+      base_url: "http://exchange-simulator:8080"
+      api_key: "${EXCHANGE_1_API_KEY}"
+      timeout_seconds: 10
+      retry_attempts: 3
+  
+  custodians:
+    - name: "custodian-simulator"
+      base_url: "http://custodian-simulator:8081"
+      api_key: "${CUSTODIAN_API_KEY}"
+      settlement_check_frequency_minutes: 60
+
+dashboard:
+  title: "Trading Risk Monitor"
+  refresh_interval_seconds: 5
+  chart_history_hours: 24
+  alert_sound_enabled: true
+  
+  layout:
+    show_portfolio_overview: true
+    show_position_details: true
+    show_pnl_chart: true
+    show_risk_metrics: true
+    show_active_alerts: true
+
+alerting:
+  escalation_delay_minutes: 10
+  max_alerts_per_hour: 50
+  alert_channels:
+    - type: "prometheus"
+      enabled: true
+    - type: "webhook"
+      url: "${ALERT_WEBHOOK_URL}"
+      enabled: false
+```
+
 ### Risk Limits Configuration
 ```yaml
 # risk_limits.yaml
@@ -739,7 +964,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN pip install -e .
 
+# Expose ports for API and dashboard
 EXPOSE 8080 50055
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8084/health').raise_for_status()"
+
 CMD ["python", "-m", "risk_monitor.main"]
 ```
 
@@ -791,4 +1022,19 @@ healthcheck:
 5. Document all compliance signals and their meanings
 
 ### Adding New Risk Metrics
-1. Implement calculation logic with proper error
+1. Implement calculation logic with proper error  RiskMetricsCalculator
+2. Add corresponding alert logic in ComplianceEngine
+3. Update dashboard visualization components
+4. Add Prometheus metrics for audit correlation
+5. Include comprehensive unit and integration tests
+
+## 📚 References
+- **Risk Management Standards**: [Link to institutional risk management practices]
+- **Regulatory Requirements**: [Link to compliance documentation]
+- **API Integration Guide**: [Link to exchange/custodian API documentation]
+- **Dashboard Development**: [Link to Streamlit/Dash development guides]
+
+
+**Status**: 🚧 Development Phase
+**Maintainer**: [Your team]
+**Last Updated**: September 2025
