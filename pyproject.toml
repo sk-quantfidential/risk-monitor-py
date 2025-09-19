@@ -10,27 +10,68 @@ authors = [
     {name = "Trading Ecosystem Team", email = "team@quantfidential.com"},
 ]
 dependencies = [
-    "fastapi>=0.104.0",
-    "uvicorn[standard]>=0.24.0",
-    "pydantic>=2.5.0",
-    "pydantic-settings>=2.1.0",
-    "grpcio>=1.59.0",
-    "grpcio-tools>=1.59.0",
-    "structlog>=23.2.0",
-    "redis>=5.0.0",
-    "prometheus-client>=0.19.0",
-    "httpx>=0.25.0",
+    # FastAPI and HTTP server
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+
+    # Pydantic v2 with latest features
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+
+    # gRPC with async support and health checking
+    "grpcio>=1.68.0",
+    "grpcio-tools>=1.68.0",
+    "grpcio-status>=1.68.0",
+    "grpcio-health-checking>=1.68.0",
+    "grpcio-reflection>=1.68.0",
+
+    # Async utilities and concurrency
+    "anyio>=4.6.0",
+    "asyncio-mqtt>=0.16.0",
+
+    # Logging and observability
+    "structlog>=24.4.0",
+    "prometheus-client>=0.21.0",
+    "opentelemetry-api>=1.27.0",
+    "opentelemetry-sdk>=1.27.0",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "opentelemetry-instrumentation-grpc>=0.48b0",
+
+    # Data persistence and caching
+    "redis>=5.1.0",
+    "asyncpg>=0.29.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+
+    # HTTP client and utilities
+    "httpx>=0.28.0",
+    "tenacity>=9.0.0",
+
+    # Data validation and serialization
+    "orjson>=3.10.0",
+    "msgpack>=1.1.0",
 ]
 requires-python = ">=3.13"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.4.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-cov>=4.1.0",
-    "ruff>=0.1.0",
-    "mypy>=1.7.0",
-    "black>=23.11.0",
+    # Testing framework
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-grpc>=0.8.0",
+
+    # Code quality and formatting
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "black>=24.10.0",
+
+    # gRPC testing utilities
+    "grpcio-testing>=1.68.0",
+
+    # Additional development tools
+    "pre-commit>=4.0.0",
+    "bandit>=1.8.0",
 ]
 
 [tool.hatch.version]
