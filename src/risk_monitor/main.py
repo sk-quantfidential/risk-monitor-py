@@ -16,6 +16,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from risk_monitor.infrastructure.config import get_settings
 from risk_monitor.infrastructure.logging import setup_logging
+from risk_monitor.infrastructure.service_discovery import ServiceDiscovery
 from risk_monitor.presentation.http.app import create_fastapi_app
 from risk_monitor.presentation.grpc.server import create_grpc_server
 
@@ -29,6 +30,7 @@ class DualProtocolServer:
         self.settings = get_settings()
         self.http_server: Optional[uvicorn.Server] = None
         self.grpc_server: Optional = None
+        self.service_discovery: Optional[ServiceDiscovery] = None
         self.shutdown_event = asyncio.Event()
 
     def setup_observability(self) -> None:
@@ -103,6 +105,14 @@ class DualProtocolServer:
 
         shutdown_tasks = []
 
+        # Deregister from service discovery first
+        if self.service_discovery:
+            logger.info("Deregistering from service discovery")
+            try:
+                await self.service_discovery.disconnect()
+            except Exception as e:
+                logger.warning("Service discovery cleanup failed", error=str(e))
+
         if self.http_server:
             logger.info("Stopping HTTP server")
             self.http_server.should_exit = True
@@ -117,12 +127,28 @@ class DualProtocolServer:
 
         logger.info("Risk Monitor service stopped")
 
+    async def setup_service_discovery(self) -> None:
+        """Setup and register with service discovery."""
+        try:
+            self.service_discovery = ServiceDiscovery(self.settings)
+            await self.service_discovery.connect()
+            await self.service_discovery.register_service()
+
+            logger.info("Service discovery configured")
+
+        except Exception as e:
+            logger.warning("Service discovery setup failed", error=str(e))
+            # Continue without service discovery
+
     async def run(self) -> None:
         """Run both HTTP and gRPC servers concurrently."""
         logger.info("Starting Risk Monitor service",
                     version=self.settings.version,
                     http_port=self.settings.http_port,
                     grpc_port=self.settings.grpc_port)
+
+        # Setup service discovery
+        await self.setup_service_discovery()
 
         # Start both servers concurrently
         try:
