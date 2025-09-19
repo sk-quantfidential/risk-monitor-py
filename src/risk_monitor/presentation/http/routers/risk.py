@@ -38,19 +38,65 @@ class RiskLimits(BaseModel):
     daily_loss_limit: float = Field(..., gt=0)
 
 
-@router.get("/risk/metrics", response_model=RiskMetrics)
-async def get_risk_metrics() -> RiskMetrics:
-    """Get current risk metrics."""
-    # TODO: Implement actual risk calculation logic
-    return RiskMetrics(
-        portfolio_value=1000000.0,
-        unrealized_pnl=5000.0,
-        realized_pnl=2500.0,
-        total_exposure=950000.0,
-        leverage_ratio=2.1,
-        var_95=25000.0,
-        timestamp=datetime.now()
-    )
+@router.get("/risk/metrics")
+async def get_risk_metrics(
+    instrument_id: str = Query(..., description="Instrument ID to get risk metrics for"),
+    lookback_days: int = Query(30, ge=1, le=365, description="Historical lookback period"),
+    confidence_level: float = Query(0.95, ge=0.5, le=0.99, description="VaR confidence level")
+):
+    """Get risk metrics for a specific instrument."""
+    try:
+        # Import protobuf services if available
+        from risk_monitor.presentation.shared.converters import (
+            create_risk_metrics_request, protobuf_to_risk_metrics_model, PROTOBUF_AVAILABLE
+        )
+
+        if not PROTOBUF_AVAILABLE:
+            # Fallback to mock data
+            return RiskMetrics(
+                portfolio_value=1000000.0,
+                unrealized_pnl=5000.0,
+                realized_pnl=2500.0,
+                total_exposure=950000.0,
+                leverage_ratio=2.1,
+                var_95=25000.0,
+                timestamp=datetime.now()
+            )
+
+        # Create and execute gRPC request internally
+        from risk_monitor.presentation.grpc.services.risk import RiskAnalyticsService
+
+        analytics_service = RiskAnalyticsService()
+        request = create_risk_metrics_request(
+            instrument_id=instrument_id,
+            calculation_params={
+                "lookback_days": lookback_days,
+                "confidence_level": confidence_level
+            }
+        )
+
+        # Mock context for internal call
+        class MockContext:
+            def cancelled(self):
+                return False
+
+        response = await analytics_service.GetRiskMetrics(request, MockContext())
+
+        if response.status.success:
+            # Convert protobuf response to HTTP model
+            risk_model = protobuf_to_risk_metrics_model(response.risk_metrics)
+            return risk_model
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=response.status.message
+            )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get risk metrics: {str(e)}"
+        )
 
 
 @router.get("/risk/alerts", response_model=List[RiskAlert])

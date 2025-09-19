@@ -49,6 +49,9 @@ dependencies = [
     # Data validation and serialization
     "orjson>=3.10.0",
     "msgpack>=1.1.0",
+
+    # Protobuf schemas (local path for development)
+    "trading-ecosystem-schemas @ file:///home/skingham/Projects/Quantfidential/trading-ecosystem/protobuf-schemas/gen/python",
 ]
 requires-python = ">=3.13"
 

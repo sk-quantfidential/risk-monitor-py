@@ -1,84 +1,162 @@
-"""gRPC risk monitoring service implementation."""
+"""gRPC risk monitoring service implementation using AnalyticsService."""
 import asyncio
 from typing import AsyncGenerator
+from datetime import datetime, timezone
 
 import structlog
 from grpc import aio
+from google.protobuf.timestamp_pb2 import Timestamp
+
+# Import protobuf generated classes
+try:
+    from api.v1.analytics_service_pb2_grpc import AnalyticsServiceServicer
+    from api.v1.analytics_service_pb2 import (
+        GetRiskMetricsRequest, GetRiskMetricsResponse,
+        GetPortfolioRiskMetricsRequest, GetPortfolioRiskMetricsResponse,
+        RunStressTestsRequest, RunStressTestsResponse,
+        RiskMetricType, RiskCalculationParams
+    )
+    from api.v1.common_responses_pb2 import ResponseStatus
+    from market.v1.risk_metrics_pb2 import RiskMetrics, PortfolioRiskMetrics
+    PROTOBUF_AVAILABLE = True
+except ImportError:
+    # Fallback for when protobuf schemas are not available
+    AnalyticsServiceServicer = object
+    PROTOBUF_AVAILABLE = False
 
 from risk_monitor.presentation.shared.middleware import RequestTracker
 
 logger = structlog.get_logger()
 
 
-class RiskService:
-    """gRPC risk monitoring service implementation.
+class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else object):
+    """gRPC Analytics service implementation focused on risk monitoring."""
 
-    Note: This will be completed when protobuf schemas are integrated.
-    The service will implement the generated risk monitoring gRPC interface.
-    """
-
-    async def GetRiskMetrics(self, request, context: aio.ServicerContext):
-        """Get current risk metrics."""
+    async def GetRiskMetrics(self, request: GetRiskMetricsRequest, context: aio.ServicerContext) -> GetRiskMetricsResponse:
+        """Get risk metrics for an instrument."""
         tracker = RequestTracker(
             protocol="grpc",
             method="GetRiskMetrics",
-            endpoint="/risk.v1.RiskMonitor/GetRiskMetrics"
+            endpoint="/api.v1.AnalyticsService/GetRiskMetrics"
         )
 
         try:
-            # TODO: Implement when protobuf schemas are available
-            logger.debug("Risk metrics requested")
+            logger.debug("Risk metrics requested", instrument_id=request.instrument_id)
 
-            # Placeholder implementation
+            # Create mock risk metrics (TODO: Replace with actual calculation)
+            risk_metrics = RiskMetrics(
+                id=f"risk_{request.instrument_id}_{int(datetime.now().timestamp())}",
+                instrument_id=request.instrument_id,
+                calculation_date=Timestamp(seconds=int(datetime.now(timezone.utc).timestamp())),
+                calculation_method="Historical Simulation"
+            )
+
+            response = GetRiskMetricsResponse(
+                risk_metrics=risk_metrics,
+                status=ResponseStatus(
+                    code=0,
+                    message="Success",
+                    success=True
+                )
+            )
+
             tracker.track_completion("ok")
-            return {}  # Return proper response type when proto is available
+            return response
 
         except Exception as e:
             logger.error("Risk metrics request failed", error=str(e))
             tracker.track_completion("error")
-            raise
 
-    async def StreamRiskAlerts(self, request, context: aio.ServicerContext) -> AsyncGenerator:
-        """Stream risk alerts to client."""
+            return GetRiskMetricsResponse(
+                status=ResponseStatus(
+                    code=500,
+                    message=f"Internal error: {str(e)}",
+                    success=False
+                )
+            )
+
+    async def GetPortfolioRiskMetrics(self, request: GetPortfolioRiskMetricsRequest, context: aio.ServicerContext) -> GetPortfolioRiskMetricsResponse:
+        """Get portfolio risk metrics."""
         tracker = RequestTracker(
             protocol="grpc",
-            method="StreamRiskAlerts",
-            endpoint="/risk.v1.RiskMonitor/StreamRiskAlerts"
-        )
-
-        logger.debug("Risk alerts stream started")
-
-        try:
-            # TODO: Implement when protobuf schemas are available
-            while not context.cancelled():
-                # Placeholder - yield risk alerts as they occur
-                await asyncio.sleep(5)
-                # yield RiskAlert(...)  # Use proper proto type when available
-
-            tracker.track_completion("ok")
-
-        except Exception as e:
-            logger.error("Risk alerts stream failed", error=str(e))
-            tracker.track_completion("error")
-            raise
-
-    async def CalculateRisk(self, request, context: aio.ServicerContext):
-        """Calculate risk for given portfolio."""
-        tracker = RequestTracker(
-            protocol="grpc",
-            method="CalculateRisk",
-            endpoint="/risk.v1.RiskMonitor/CalculateRisk"
+            method="GetPortfolioRiskMetrics",
+            endpoint="/api.v1.AnalyticsService/GetPortfolioRiskMetrics"
         )
 
         try:
-            # TODO: Implement when protobuf schemas are available
-            logger.debug("Risk calculation requested")
+            logger.debug("Portfolio risk metrics requested", portfolio_id=request.portfolio_id)
 
-            # Placeholder implementation
+            # Create mock portfolio risk metrics (TODO: Replace with actual calculation)
+            portfolio_metrics = PortfolioRiskMetrics(
+                id=f"portfolio_risk_{request.portfolio_id}_{int(datetime.now().timestamp())}",
+                portfolio_id=request.portfolio_id,
+                calculation_date=Timestamp(seconds=int(datetime.now(timezone.utc).timestamp()))
+            )
+
+            response = GetPortfolioRiskMetricsResponse(
+                portfolio_metrics=portfolio_metrics,
+                status=ResponseStatus(
+                    code=0,
+                    message="Success",
+                    success=True
+                )
+            )
+
             tracker.track_completion("ok")
-            return {}  # Return proper response type when proto is available
+            return response
 
         except Exception as e:
-            logger.error("Risk calculation failed", error=str(e))
+            logger.error("Portfolio risk metrics request failed", error=str(e))
             tracker.track_completion("error")
-            raise
+
+            return GetPortfolioRiskMetricsResponse(
+                status=ResponseStatus(
+                    code=500,
+                    message=f"Internal error: {str(e)}",
+                    success=False
+                )
+            )
+
+    async def RunStressTests(self, request: RunStressTestsRequest, context: aio.ServicerContext) -> RunStressTestsResponse:
+        """Run stress tests on portfolio or instrument."""
+        tracker = RequestTracker(
+            protocol="grpc",
+            method="RunStressTests",
+            endpoint="/api.v1.AnalyticsService/RunStressTests"
+        )
+
+        try:
+            target = "portfolio" if request.HasField("portfolio_id") else "instrument"
+            target_id = request.portfolio_id if request.HasField("portfolio_id") else request.instrument_id
+
+            logger.debug("Stress tests requested", target=target, target_id=target_id)
+
+            # TODO: Implement actual stress testing logic
+            # For now, return empty results
+            from market.v1.risk_metrics_pb2 import StressTestResults
+
+            results = StressTestResults()
+
+            response = RunStressTestsResponse(
+                results=results,
+                status=ResponseStatus(
+                    code=0,
+                    message="Stress tests completed",
+                    success=True
+                )
+            )
+
+            tracker.track_completion("ok")
+            return response
+
+        except Exception as e:
+            logger.error("Stress tests failed", error=str(e))
+            tracker.track_completion("error")
+
+            return RunStressTestsResponse(
+                status=ResponseStatus(
+                    code=500,
+                    message=f"Internal error: {str(e)}",
+                    success=False
+                )
+            )
