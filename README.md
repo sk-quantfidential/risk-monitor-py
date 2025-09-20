@@ -998,6 +998,31 @@ healthcheck:
 - **Reporting**: Automated generation of regulatory risk reports
 - **Compliance Signals**: Structured compliance events for audit correlation
 
+## 🛠️ Development Setup
+
+For comprehensive development environment setup, see [Development Setup Guide](../project-plan/DEVELOPMENT_SETUP.md).
+
+### Quick Start
+```bash
+# Activate conda environment
+conda activate py313_trading_ecosystem_dev
+
+# Install in development mode
+pip install -e ".[dev]"
+
+# Run tests
+pytest tests/ -v
+
+# Start development server
+uvicorn risk_monitor.main:app --reload --host 0.0.0.0 --port 8084
+```
+
+### Environment Verification
+```bash
+# Run environment verification script
+python ../project-plan/scripts/verify_setup.py
+```
+
 ## 🚀 Performance
 
 ### Benchmarks
