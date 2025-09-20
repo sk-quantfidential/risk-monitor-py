@@ -22,7 +22,7 @@ class RiskMetrics(BaseModel):
 class RiskAlert(BaseModel):
     """Risk alert model."""
     alert_id: str
-    severity: str = Field(..., regex="^(low|medium|high|critical)$")
+    severity: str = Field(..., pattern="^(low|medium|high|critical)$")
     message: str
     metric_name: str
     current_value: float
@@ -101,7 +101,7 @@ async def get_risk_metrics(
 
 @router.get("/risk/alerts", response_model=List[RiskAlert])
 async def get_risk_alerts(
-    severity: Optional[str] = Query(None, regex="^(low|medium|high|critical)$"),
+    severity: Optional[str] = Query(None, pattern="^(low|medium|high|critical)$"),
     limit: int = Query(10, ge=1, le=100)
 ) -> List[RiskAlert]:
     """Get active risk alerts."""

@@ -2,6 +2,9 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [project]
 name = "risk-monitor"
 version = "0.1.0"
@@ -11,12 +14,12 @@ authors = [
 ]
 dependencies = [
     # FastAPI and HTTP server
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.32.0",
+    "fastapi>=0.116.2",
+    "uvicorn[standard]>=0.36.0",
 
     # Pydantic v2 with latest features
-    "pydantic>=2.10.0",
-    "pydantic-settings>=2.6.0",
+    "pydantic>=2.11.9",
+    "pydantic-settings>=2.10.1",
 
     # gRPC with async support and health checking
     "grpcio>=1.68.0",
@@ -64,13 +67,22 @@ dev = [
     "pytest-mock>=3.14.0",
     "pytest-grpc>=0.8.0",
 
+    # HTTP testing
+    "httpx>=0.28.0",
+    "pytest-httpx>=0.30.0",
+
+    # gRPC testing utilities
+    "grpcio-testing>=1.68.0",
+
+    # Test data and mocking
+    "factory-boy>=3.3.0",
+    "freezegun>=1.5.0",
+    "responses>=0.25.0",
+
     # Code quality and formatting
     "ruff>=0.8.0",
     "mypy>=1.13.0",
     "black>=24.10.0",
-
-    # gRPC testing utilities
-    "grpcio-testing>=1.68.0",
 
     # Additional development tools
     "pre-commit>=4.0.0",
@@ -96,6 +108,7 @@ warn_unused_configs = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
