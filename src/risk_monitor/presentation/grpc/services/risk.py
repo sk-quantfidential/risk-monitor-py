@@ -32,7 +32,7 @@ logger = structlog.get_logger()
 class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else object):
     """gRPC Analytics service implementation focused on risk monitoring."""
 
-    async def GetRiskMetrics(self, request: GetRiskMetricsRequest, context: aio.ServicerContext) -> GetRiskMetricsResponse:
+    async def GetRiskMetrics(self, request, context):
         """Get risk metrics for an instrument."""
         tracker = RequestTracker(
             protocol="grpc",
@@ -75,7 +75,7 @@ class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else o
                 )
             )
 
-    async def GetPortfolioRiskMetrics(self, request: GetPortfolioRiskMetricsRequest, context: aio.ServicerContext) -> GetPortfolioRiskMetricsResponse:
+    async def GetPortfolioRiskMetrics(self, request, context):
         """Get portfolio risk metrics."""
         tracker = RequestTracker(
             protocol="grpc",
@@ -117,7 +117,7 @@ class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else o
                 )
             )
 
-    async def RunStressTests(self, request: RunStressTestsRequest, context: aio.ServicerContext) -> RunStressTestsResponse:
+    async def RunStressTests(self, request, context):
         """Run stress tests on portfolio or instrument."""
         tracker = RequestTracker(
             protocol="grpc",
@@ -157,6 +157,49 @@ class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else o
                 status=ResponseStatus(
                     code=500,
                     message=f"Internal error: {str(e)}",
+                    success=False
+                )
+            )
+
+    async def StreamRiskMetrics(self, request, context):
+        """Stream real-time risk metrics."""
+        if not PROTOBUF_AVAILABLE:
+            # Create mock response when protobuf unavailable
+            mock_response = type('MockResponse', (), {})()
+            yield mock_response
+            return
+
+        try:
+            logger.debug("Risk metrics stream requested",
+                        instrument_ids=getattr(request, 'instrument_ids', []))
+
+            # Simulate streaming risk metrics
+            while not context.cancelled():
+                # Create mock streaming response
+                risk_metrics = RiskMetrics(
+                    id=f"stream_risk_{int(datetime.now().timestamp())}",
+                    instrument_id="STREAM",
+                    calculation_date=Timestamp(seconds=int(datetime.now(timezone.utc).timestamp()))
+                )
+
+                response = GetRiskMetricsResponse(
+                    risk_metrics=risk_metrics,
+                    status=ResponseStatus(
+                        code=0,
+                        message="Streaming risk metrics",
+                        success=True
+                    )
+                )
+
+                yield response
+                await asyncio.sleep(5)  # Update every 5 seconds
+
+        except Exception as e:
+            logger.error("Error in streaming risk metrics", error=str(e))
+            yield GetRiskMetricsResponse(
+                status=ResponseStatus(
+                    code=500,
+                    message=f"Streaming error: {str(e)}",
                     success=False
                 )
             )

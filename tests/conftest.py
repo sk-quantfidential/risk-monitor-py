@@ -53,7 +53,8 @@ def test_client(fastapi_app) -> TestClient:
 @pytest_asyncio.fixture
 async def async_client(fastapi_app) -> AsyncGenerator[AsyncClient, None]:
     """Create async test client."""
-    async with AsyncClient(app=fastapi_app, base_url="http://test") as client:
+    from httpx import ASGITransport
+    async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as client:
         yield client
 
 
