@@ -1,6 +1,5 @@
 """Main application entry point for Risk Monitor service with dual HTTP/gRPC support."""
 import asyncio
-import logging
 import signal
 from typing import Optional
 
@@ -9,7 +8,10 @@ import uvicorn
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.asyncio import AsyncIOInstrumentor
-from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient, GrpcInstrumentorServer
+from opentelemetry.instrumentation.grpc import (
+    GrpcInstrumentorClient,
+    GrpcInstrumentorServer,
+)
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -17,8 +19,8 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from risk_monitor.infrastructure.config import get_settings
 from risk_monitor.infrastructure.logging import setup_logging
 from risk_monitor.infrastructure.service_discovery import ServiceDiscovery
-from risk_monitor.presentation.http.app import create_fastapi_app
 from risk_monitor.presentation.grpc.server import create_grpc_server
+from risk_monitor.presentation.http.app import create_fastapi_app
 
 logger = structlog.get_logger()
 
@@ -28,9 +30,9 @@ class DualProtocolServer:
 
     def __init__(self):
         self.settings = get_settings()
-        self.http_server: Optional[uvicorn.Server] = None
+        self.http_server: uvicorn.Server | None = None
         self.grpc_server: Optional = None
-        self.service_discovery: Optional[ServiceDiscovery] = None
+        self.service_discovery: ServiceDiscovery | None = None
         self.shutdown_event = asyncio.Event()
 
     def setup_observability(self) -> None:
