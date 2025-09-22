@@ -1,5 +1,6 @@
 """Integration tests for inter-service gRPC communication."""
 import asyncio
+import unittest.mock
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -71,9 +72,13 @@ class TestInterServiceCommunication:
 
         mock_service_discovery.get_service.side_effect = [trading_service_info, test_coordinator_info]
 
-        # This should fail because service discovery integration doesn't exist yet
+        # This should pass now that service discovery integration exists
         manager = InterServiceClientManager(test_settings, service_discovery=mock_service_discovery)
         await manager.initialize()
+
+        # Create clients to trigger service discovery
+        await manager.get_trading_engine_client()
+        await manager.get_test_coordinator_client()
 
         # Verify service discovery was used
         expected_calls = [
