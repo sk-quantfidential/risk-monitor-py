@@ -19,18 +19,33 @@
 ---
 
 ### 🔗 Milestone TSE-0001.3c: Python Services gRPC Integration
-**Status**: Not Started
+**Status**: 🔄 **IN PROGRESS** (50% complete - 2/4 tasks done)
 **Priority**: High
+**Branch**: `feature/TSE-0001.3c-complete-grpc-integration`
 
-**Tasks**:
-- [ ] Implement gRPC server with health service
-- [ ] Service registration with Redis-based discovery
-- [ ] Configuration service client integration
-- [ ] Inter-service communication testing
+**Completed Tasks**:
+- [x] Implement gRPC server with health service ✅ (dual HTTP/gRPC architecture in main.py)
+- [x] Service registration with Redis-based discovery ✅ (complete ServiceDiscovery with heartbeat)
+
+**Remaining Tasks** (TDD approach):
+- [ ] **Task 1**: Create failing tests for configuration service client integration (RED phase)
+- [ ] **Task 2**: Implement configuration service client to make tests pass (GREEN phase)
+- [ ] **Task 3**: Create failing tests for inter-service communication (RED phase)
+- [ ] **Task 4**: Implement inter-service gRPC client communication (GREEN phase)
+- [ ] **Task 5**: Refactor and optimize implementation (REFACTOR phase)
+- [ ] **Task 6**: Update documentation and validate BDD acceptance criteria
 
 **BDD Acceptance**: Python services can discover and communicate with each other via gRPC
 
 **Dependencies**: TSE-0001.1b (Python Services Bootstrapping), TSE-0001.3a (Core Infrastructure)
+
+**Technical Implementation Details**:
+- **Configuration Service Client**: Create client to fetch configuration from central config service
+- **Service Discovery Integration**: Use existing ServiceDiscovery to find configuration service endpoint
+- **Inter-Service Communication**: Implement gRPC client calls to other Python services (trading-engine, test-coordinator)
+- **Testing Strategy**: TDD with failing tests first, then implementation to make tests pass
+- **Error Handling**: Graceful fallback when services unavailable, retry mechanisms
+- **Observability**: OpenTelemetry tracing for all service-to-service calls
 
 ---
 
@@ -112,4 +127,4 @@
 
 ---
 
-**Last Updated**: 2025-09-17
+**Last Updated**: 2025-09-22
