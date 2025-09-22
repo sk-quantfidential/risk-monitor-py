@@ -80,7 +80,7 @@ dev = [
     "responses>=0.25.0",
 
     # Code quality and formatting
-    "ruff>=0.8.0",
+    "ruff>=0.13.1",
     "mypy>=1.13.0",
     "black>=24.10.0",
 
@@ -98,6 +98,8 @@ packages = ["src/risk_monitor"]
 [tool.ruff]
 target-version = "py313"
 line-length = 88
+
+[tool.ruff.lint]
 select = ["E", "F", "UP", "B", "SIM", "I"]
 
 [tool.mypy]
