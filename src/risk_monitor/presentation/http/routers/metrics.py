@@ -1,6 +1,6 @@
 """Prometheus metrics endpoint."""
 from fastapi import APIRouter, Response
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 router = APIRouter()
 

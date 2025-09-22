@@ -1,8 +1,7 @@
 """Risk monitoring HTTP endpoints."""
-from typing import List, Optional
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 router = APIRouter()
@@ -48,7 +47,9 @@ async def get_risk_metrics(
     try:
         # Import protobuf services if available
         from risk_monitor.presentation.shared.converters import (
-            create_risk_metrics_request, protobuf_to_risk_metrics_model, PROTOBUF_AVAILABLE
+            PROTOBUF_AVAILABLE,
+            create_risk_metrics_request,
+            protobuf_to_risk_metrics_model,
         )
 
         if not PROTOBUF_AVAILABLE:
@@ -99,11 +100,11 @@ async def get_risk_metrics(
         )
 
 
-@router.get("/risk/alerts", response_model=List[RiskAlert])
+@router.get("/risk/alerts", response_model=list[RiskAlert])
 async def get_risk_alerts(
-    severity: Optional[str] = Query(None, pattern="^(low|medium|high|critical)$"),
+    severity: str | None = Query(None, pattern="^(low|medium|high|critical)$"),
     limit: int = Query(10, ge=1, le=100)
-) -> List[RiskAlert]:
+) -> list[RiskAlert]:
     """Get active risk alerts."""
     # TODO: Implement actual alert retrieval logic
     alerts = [
@@ -144,7 +145,7 @@ async def update_risk_limits(limits: RiskLimits) -> RiskLimits:
 
 
 @router.post("/risk/calculate")
-async def calculate_risk(portfolio_positions: List[dict]) -> RiskMetrics:
+async def calculate_risk(portfolio_positions: list[dict]) -> RiskMetrics:
     """Calculate risk metrics for given portfolio positions."""
     # TODO: Implement actual risk calculation engine
     raise HTTPException(

@@ -1,6 +1,4 @@
 """Health check endpoints for HTTP API."""
-from typing import Dict, Any
-import asyncio
 import time
 
 from fastapi import APIRouter, HTTPException, status
@@ -17,13 +15,13 @@ class HealthResponse(BaseModel):
     timestamp: str
     version: str
     uptime_seconds: float
-    dependencies: Dict[str, str]
+    dependencies: dict[str, str]
 
 
 class ReadinessResponse(BaseModel):
     """Readiness check response model."""
     ready: bool
-    checks: Dict[str, bool]
+    checks: dict[str, bool]
     timestamp: str
 
 
@@ -50,7 +48,7 @@ async def health_check() -> HealthResponse:
 
 
 @router.get("/health/live")
-async def liveness_check() -> Dict[str, str]:
+async def liveness_check() -> dict[str, str]:
     """Kubernetes liveness probe endpoint."""
     return {"status": "alive"}
 
