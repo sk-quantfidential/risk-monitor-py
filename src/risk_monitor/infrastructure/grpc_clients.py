@@ -18,6 +18,14 @@ from risk_monitor.infrastructure.service_discovery import ServiceDiscovery, Serv
 logger = structlog.get_logger()
 tracer = trace.get_tracer(__name__)
 
+# Constants
+DEFAULT_GRPC_TIMEOUT = 30.0
+DEFAULT_HEALTH_CHECK_TIMEOUT = 5.0
+DEFAULT_CIRCUIT_BREAKER_THRESHOLD = 5
+DEFAULT_CIRCUIT_BREAKER_TIMEOUT = 60.0
+DEFAULT_TRADING_ENGINE_PORT = 50051
+DEFAULT_TEST_COORDINATOR_PORT = 50052
+
 
 class ServiceCommunicationError(Exception):
     """Inter-service communication related errors."""
@@ -79,7 +87,11 @@ class HealthResponse:
 class CircuitBreaker:
     """Circuit breaker for service communication."""
 
-    def __init__(self, failure_threshold: int = 5, timeout: float = 60.0):
+    def __init__(
+        self,
+        failure_threshold: int = DEFAULT_CIRCUIT_BREAKER_THRESHOLD,
+        timeout: float = DEFAULT_CIRCUIT_BREAKER_TIMEOUT
+    ):
         self.failure_threshold = failure_threshold
         self.timeout = timeout
         self.failure_count = 0
@@ -126,6 +138,8 @@ class BaseGrpcClient(ABC):
         self._channel: Optional[grpc.aio.Channel] = None
         self._connected = False
         self.circuit_breaker = CircuitBreaker()
+        self._call_count = 0
+        self._error_count = 0
 
     @property
     def address(self) -> str:
@@ -168,6 +182,21 @@ class BaseGrpcClient(ABC):
         """Check if client is connected."""
         return self._connected and self._channel is not None
 
+    def get_stats(self) -> Dict[str, Any]:
+        """Get client performance statistics."""
+        error_rate = (self._error_count / self._call_count * 100) if self._call_count > 0 else 0
+
+        return {
+            "service_name": self.service_name,
+            "address": self.address,
+            "connected": self.is_connected(),
+            "total_calls": self._call_count,
+            "error_count": self._error_count,
+            "error_rate_percent": round(error_rate, 2),
+            "circuit_breaker_state": self.circuit_breaker.state,
+            "circuit_breaker_failures": self.circuit_breaker.failure_count
+        }
+
     async def _test_connection(self) -> None:
         """Test gRPC connection with health check."""
         try:
@@ -177,7 +206,7 @@ class BaseGrpcClient(ABC):
             health_stub = health_pb2_grpc.HealthStub(self._channel)
             request = health_pb2.HealthCheckRequest(service="")
 
-            response = await health_stub.Check(request, timeout=5.0)
+            response = await health_stub.Check(request, timeout=DEFAULT_HEALTH_CHECK_TIMEOUT)
             if response.status != health_pb2.HealthCheckResponse.SERVING:
                 raise ServiceCommunicationError("Service not healthy")
 
@@ -188,10 +217,12 @@ class BaseGrpcClient(ABC):
                 return
             raise ServiceCommunicationError(f"Health check failed: {e}")
 
-    async def _make_call(self, method_name: str, request: Any, timeout: float = 30.0) -> Any:
+    async def _make_call(self, method_name: str, request: Any, timeout: float = DEFAULT_GRPC_TIMEOUT) -> Any:
         """Make gRPC call with circuit breaker and retry logic."""
         if not self.circuit_breaker.can_execute():
             raise ServiceCommunicationError("Circuit breaker open")
+
+        self._call_count += 1
 
         try:
             with tracer.start_span(f"grpc_call_{self.service_name}_{method_name}") as span:
@@ -211,6 +242,7 @@ class BaseGrpcClient(ABC):
 
         except Exception as e:
             self.circuit_breaker.on_failure()
+            self._error_count += 1
             logger.error("gRPC call failed",
                         service=self.service_name, method=method_name, error=str(e))
 
@@ -234,7 +266,7 @@ class BaseGrpcClient(ABC):
             health_stub = health_pb2_grpc.HealthStub(self._channel)
             request = health_pb2.HealthCheckRequest(service="")
 
-            response = await health_stub.Check(request, timeout=5.0)
+            response = await health_stub.Check(request, timeout=DEFAULT_HEALTH_CHECK_TIMEOUT)
             status = "SERVING" if response.status == health_pb2.HealthCheckResponse.SERVING else "NOT_SERVING"
 
             return HealthResponse(
@@ -279,13 +311,13 @@ class TradingEngineClient(BaseGrpcClient):
         else:
             raise ServiceCommunicationError(f"Unknown method: {method_name}")
 
-    async def get_strategy_status(self, strategy_id: str, timeout: float = 30.0) -> StrategyStatus:
+    async def get_strategy_status(self, strategy_id: str, timeout: float = DEFAULT_GRPC_TIMEOUT) -> StrategyStatus:
         """Get trading strategy status."""
         request = MagicMock()
         request.strategy_id = strategy_id
         return await self._make_call("get_strategy_status", request, timeout)
 
-    async def get_current_positions(self, timeout: float = 30.0) -> List[Position]:
+    async def get_current_positions(self, timeout: float = DEFAULT_GRPC_TIMEOUT) -> List[Position]:
         """Get current trading positions."""
         request = MagicMock()
         return await self._make_call("get_current_positions", request, timeout)
@@ -332,7 +364,7 @@ class TestCoordinatorClient(BaseGrpcClient):
         else:
             raise ServiceCommunicationError(f"Unknown method: {method_name}")
 
-    async def get_current_scenario_status(self, timeout: float = 30.0) -> ScenarioStatus:
+    async def get_current_scenario_status(self, timeout: float = DEFAULT_GRPC_TIMEOUT) -> ScenarioStatus:
         """Get current test scenario status."""
         request = MagicMock()
         return await self._make_call("get_current_scenario_status", request, timeout)
@@ -343,7 +375,7 @@ class TestCoordinatorClient(BaseGrpcClient):
         logger.info("Subscribed to chaos events",
                    subscribers_count=len(self._chaos_subscribers))
 
-    async def simulate_chaos_event(self, event_type: str, target_service: str, timeout: float = 30.0) -> ChaosEvent:
+    async def simulate_chaos_event(self, event_type: str, target_service: str, timeout: float = DEFAULT_GRPC_TIMEOUT) -> ChaosEvent:
         """Simulate a chaos engineering event."""
         request = MagicMock()
         request.event_type = event_type
@@ -361,11 +393,29 @@ class InterServiceClientManager:
         self._test_coordinator_client: Optional[TestCoordinatorClient] = None
         self._clients: Dict[str, BaseGrpcClient] = {}
         self.connection_pool_size = 0
+        self._initialization_time: Optional[float] = None
 
     async def initialize(self) -> None:
         """Initialize the client manager."""
         logger.info("Initializing inter-service client manager")
+        self._initialization_time = time.time()
         # Initialization complete - clients will be created on-demand
+
+    def get_manager_stats(self) -> Dict[str, Any]:
+        """Get manager performance statistics."""
+        uptime = time.time() - self._initialization_time if self._initialization_time else 0
+
+        client_stats = {}
+        for name, client in self._clients.items():
+            client_stats[name] = client.get_stats()
+
+        return {
+            "uptime_seconds": round(uptime, 2),
+            "active_clients": len(self._clients),
+            "connection_pool_size": self.connection_pool_size,
+            "total_channels": len(BaseGrpcClient._channels),
+            "client_stats": client_stats
+        }
 
     async def cleanup(self) -> None:
         """Cleanup all clients and connections."""
@@ -411,7 +461,7 @@ class InterServiceClientManager:
             else:
                 # Fallback to default endpoints
                 host = getattr(self.settings, 'trading_engine_host', 'localhost')
-                port = getattr(self.settings, 'trading_engine_grpc_port', 50051)
+                port = getattr(self.settings, 'trading_engine_grpc_port', DEFAULT_TRADING_ENGINE_PORT)
 
             # Create and connect client
             self._trading_client = TradingEngineClient(host, port, self.settings)
@@ -447,7 +497,7 @@ class InterServiceClientManager:
             else:
                 # Fallback to default endpoints
                 host = getattr(self.settings, 'test_coordinator_host', 'localhost')
-                port = getattr(self.settings, 'test_coordinator_grpc_port', 50052)
+                port = getattr(self.settings, 'test_coordinator_grpc_port', DEFAULT_TEST_COORDINATOR_PORT)
 
             # Create and connect client
             self._test_coordinator_client = TestCoordinatorClient(host, port, self.settings)

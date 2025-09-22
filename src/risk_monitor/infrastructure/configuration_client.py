@@ -14,6 +14,13 @@ from risk_monitor.infrastructure.service_discovery import ServiceDiscovery, Serv
 
 logger = structlog.get_logger()
 
+# Constants
+DEFAULT_CACHE_TTL_SECONDS = 300  # 5 minutes
+DEFAULT_CONFIG_SERVICE_PORT = 8090
+DEFAULT_CONFIG_SERVICE_HOST = "localhost"
+VALID_CONFIG_TYPES = {"string", "number", "boolean", "json"}
+CONFIG_KEY_PATTERN_REGEX = r"^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*$"
+
 
 class ConfigurationError(Exception):
     """Configuration service related errors."""
@@ -36,14 +43,21 @@ class ConfigurationValue:
 
     def validate(self) -> bool:
         """Validate configuration value structure."""
+        import re
+
         if not self.key or not isinstance(self.key, str):
             return False
-        if ".." in self.key or self.key.startswith(".") or self.key.endswith("."):
+
+        # Use regex pattern for more robust key validation
+        if not re.match(CONFIG_KEY_PATTERN_REGEX, self.key):
             return False
+
         if not self.value:
             return False
-        if self.type not in ["string", "number", "boolean", "json"]:
+
+        if self.type not in VALID_CONFIG_TYPES:
             return False
+
         return True
 
     def as_str(self) -> str:
@@ -88,7 +102,8 @@ class ConfigurationServiceClient:
         self._connected = False
         self._subscribers: Dict[str, List[Callable]] = {}
         self.cache_hits = 0
-        self._default_cache_ttl = 300  # 5 minutes
+        self._cache_misses = 0
+        self._default_cache_ttl = DEFAULT_CACHE_TTL_SECONDS
 
     async def connect(self) -> None:
         """Connect to configuration service."""
@@ -103,8 +118,8 @@ class ConfigurationServiceClient:
                 self._config_service_info = ServiceInfo(
                     name="configuration-service",
                     version="1.0.0",
-                    host=getattr(self.settings, 'config_service_host', 'localhost'),
-                    http_port=getattr(self.settings, 'config_service_port', 8090),
+                    host=getattr(self.settings, 'config_service_host', DEFAULT_CONFIG_SERVICE_HOST),
+                    http_port=getattr(self.settings, 'config_service_port', DEFAULT_CONFIG_SERVICE_PORT),
                     grpc_port=50090,
                     status="healthy"
                 )
@@ -150,20 +165,50 @@ class ConfigurationServiceClient:
         """Check if client is connected."""
         return self._connected
 
+    def _validate_key(self, key: str) -> None:
+        """Validate configuration key format and raise detailed error if invalid."""
+        import re
+
+        if not key or not isinstance(key, str):
+            raise ConfigurationError("Configuration key must be a non-empty string")
+
+        if not re.match(CONFIG_KEY_PATTERN_REGEX, key):
+            raise ConfigurationError(
+                f"Invalid configuration key format: '{key}'. "
+                "Keys must start with a letter and contain only letters, numbers, "
+                "underscores, and dots for hierarchy (e.g., 'app.database.timeout')"
+            )
+
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache performance statistics."""
+        total_requests = self.cache_hits + self._cache_misses
+        hit_rate = (self.cache_hits / total_requests * 100) if total_requests > 0 else 0
+
+        return {
+            "cache_hits": self.cache_hits,
+            "cache_misses": self._cache_misses,
+            "hit_rate_percent": round(hit_rate, 2),
+            "cached_keys": len(self._cache),
+            "cache_size_bytes": sum(len(str(v.value)) for v in self._cache.values())
+        }
+
     async def get_configuration(self, key: str, environment: Optional[str] = None) -> ConfigurationValue:
         """Get a single configuration value."""
         if not self._connected:
             raise ConfigurationError("Client not connected")
 
-        # Validate key format
-        if ".." in key or key.startswith(".") or key.endswith(".") or not key:
-            raise ConfigurationError("Invalid configuration key")
+        # Validate key format with detailed error messages
+        self._validate_key(key)
 
         # Check cache first
         cache_key = f"{key}:{environment or self.settings.environment}"
         if cache_key in self._cache and self._is_cache_valid(cache_key):
             self.cache_hits += 1
+            logger.debug("Configuration cache hit", key=key, environment=environment)
             return self._cache[cache_key]
+
+        # Record cache miss
+        self._cache_misses += 1
 
         try:
             # Fetch from service
