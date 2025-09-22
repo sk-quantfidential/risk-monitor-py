@@ -1,10 +1,9 @@
 """Shared middleware for both HTTP and gRPC protocols."""
 import time
-from typing import Any, Callable, Dict
+from typing import Any
 
 import structlog
 from opentelemetry import trace
-from opentelemetry.instrumentation.utils import unwrap
 from prometheus_client import Counter, Histogram
 
 # Metrics
@@ -62,7 +61,7 @@ class RequestTracker:
         )
 
 
-async def trace_request(span_name: str, attributes: Dict[str, Any]) -> Any:
+async def trace_request(span_name: str, attributes: dict[str, Any]) -> Any:
     """Create tracing span for requests."""
     with tracer.start_as_current_span(span_name) as span:
         for key, value in attributes.items():

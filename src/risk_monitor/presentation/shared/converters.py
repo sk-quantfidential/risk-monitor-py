@@ -1,14 +1,17 @@
 """Converters between HTTP models and protobuf messages."""
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any
 
-from pydantic import BaseModel
 from google.protobuf.timestamp_pb2 import Timestamp
+from pydantic import BaseModel
 
 # Import protobuf types with fallback
 try:
-    from market.v1.risk_metrics_pb2 import RiskMetrics, PortfolioRiskMetrics
-    from api.v1.analytics_service_pb2 import GetRiskMetricsRequest, RiskCalculationParams
+    from api.v1.analytics_service_pb2 import (
+        GetRiskMetricsRequest,
+        RiskCalculationParams,
+    )
+    from market.v1.risk_metrics_pb2 import PortfolioRiskMetrics, RiskMetrics
     PROTOBUF_AVAILABLE = True
 except ImportError:
     PROTOBUF_AVAILABLE = False
@@ -20,20 +23,20 @@ class RiskMetricsModel(BaseModel):
     instrument_id: str
     calculation_date: datetime
     calculation_method: str
-    volatility: Optional[Dict[str, float]] = None
-    var_metrics: Optional[Dict[str, float]] = None
-    performance: Optional[Dict[str, float]] = None
-    liquidity: Optional[Dict[str, float]] = None
+    volatility: dict[str, float] | None = None
+    var_metrics: dict[str, float] | None = None
+    performance: dict[str, float] | None = None
+    liquidity: dict[str, float] | None = None
 
 
 class PortfolioRiskMetricsModel(BaseModel):
     """HTTP API model for portfolio risk metrics."""
     id: str
     portfolio_id: str
-    total_value: Optional[float] = None
+    total_value: float | None = None
     calculation_date: datetime
-    concentration: Optional[Dict[str, float]] = None
-    portfolio_var: Optional[Dict[str, float]] = None
+    concentration: dict[str, float] | None = None
+    portfolio_var: dict[str, float] | None = None
 
 
 def timestamp_to_datetime(timestamp: Timestamp) -> datetime:
@@ -84,7 +87,7 @@ def protobuf_to_portfolio_risk_model(proto_metrics: 'PortfolioRiskMetrics') -> P
 
 def create_risk_metrics_request(
     instrument_id: str,
-    calculation_params: Optional[Dict[str, Any]] = None
+    calculation_params: dict[str, Any] | None = None
 ) -> 'GetRiskMetricsRequest':
     """Create protobuf GetRiskMetricsRequest from HTTP parameters."""
     if not PROTOBUF_AVAILABLE:

@@ -1,5 +1,5 @@
 """Core risk monitoring business logic."""
-from typing import Dict, Any
+from typing import Any
 
 from risk_monitor.infrastructure.logging import get_logger
 
@@ -11,8 +11,8 @@ class RiskMonitorService:
 
     def __init__(self) -> None:
         """Initialize risk monitoring service."""
-        self.position_limits: Dict[str, float] = {}
-        self.pnl_thresholds: Dict[str, float] = {}
+        self.position_limits: dict[str, float] = {}
+        self.pnl_thresholds: dict[str, float] = {}
 
     async def calculate_pnl(self, account: str, asset: str) -> float:
         """Calculate P&L for account and asset."""
@@ -27,7 +27,7 @@ class RiskMonitorService:
         # TODO: Implement actual position limit checks
         return True
 
-    async def generate_alert(self, alert_type: str, message: str, metadata: Dict[str, Any]) -> str:
+    async def generate_alert(self, alert_type: str, message: str, metadata: dict[str, Any]) -> str:
         """Generate risk alert."""
         logger.warning("Risk alert generated",
                       alert_type=alert_type, message=message, metadata=metadata)
