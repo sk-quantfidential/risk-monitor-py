@@ -1,5 +1,4 @@
 """Health check endpoints for Risk Monitor service."""
-from typing import Dict, Any
 
 from fastapi import APIRouter, status
 from pydantic import BaseModel
@@ -21,7 +20,7 @@ class HealthResponse(BaseModel):
 class ReadinessResponse(BaseModel):
     """Readiness check response model."""
     status: str
-    checks: Dict[str, str]
+    checks: dict[str, str]
 
 
 @router.get("/health", status_code=status.HTTP_200_OK, response_model=HealthResponse)

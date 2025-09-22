@@ -23,8 +23,8 @@ class Settings(BaseSettings):
 
     # Server settings
     host: str = "0.0.0.0"
-    http_port: int = Field(default=8080, gt=0, le=65535)
-    grpc_port: int = Field(default=9090, gt=0, le=65535)
+    http_port: int = Field(default=8084, gt=0, le=65535)  # Risk Monitor HTTP port
+    grpc_port: int = Field(default=50054, gt=0, le=65535)  # Risk Monitor gRPC port
 
     # Logging settings
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
@@ -32,6 +32,24 @@ class Settings(BaseSettings):
 
     # External services
     redis_url: str = "redis://localhost:6379"
+    postgres_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/trading_ecosystem"
+    service_registry_url: str = "http://localhost:8080"
+
+    # Service discovery settings
+    service_name: str = "risk-monitor"
+    service_version: str = "0.1.0"
+    health_check_interval: int = 30  # seconds
+    registration_retry_interval: int = 5  # seconds
+
+    # OpenTelemetry settings
+    otel_service_name: str = "risk-monitor"
+    otel_exporter_endpoint: str = "http://localhost:4317"
+    otel_insecure: bool = True
+
+    # Performance settings
+    worker_pool_size: int = 10
+    max_concurrent_requests: int = 100
+    request_timeout: float = 30.0
 
     # Risk monitoring settings
     position_limit_threshold: float = 1000000.0  # $1M default
@@ -39,7 +57,7 @@ class Settings(BaseSettings):
     alert_cooldown_seconds: int = 300  # 5 minutes
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Get cached application settings."""
     return Settings()
