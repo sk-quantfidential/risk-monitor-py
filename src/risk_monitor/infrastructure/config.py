@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     alert_cooldown_seconds: int = 300  # 5 minutes
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Get cached application settings."""
     return Settings()

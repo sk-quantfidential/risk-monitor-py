@@ -2,8 +2,8 @@
 import asyncio
 import json
 import time
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from typing import Any
 
 import httpx
 import redis.asyncio as redis
@@ -24,7 +24,7 @@ class ServiceInfo:
     http_port: int
     grpc_port: int
     status: str = "healthy"
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
     registered_at: float = 0.0
     last_heartbeat: float = 0.0
 
@@ -55,11 +55,11 @@ class ServiceDiscovery:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.redis_client: Optional[redis.Redis] = None
-        self.http_client: Optional[httpx.AsyncClient] = None
-        self.service_info: Optional[ServiceInfo] = None
-        self.heartbeat_task: Optional[asyncio.Task] = None
-        self.registration_task: Optional[asyncio.Task] = None
+        self.redis_client: redis.Redis | None = None
+        self.http_client: httpx.AsyncClient | None = None
+        self.service_info: ServiceInfo | None = None
+        self.heartbeat_task: asyncio.Task | None = None
+        self.registration_task: asyncio.Task | None = None
 
     async def connect(self) -> None:
         """Connect to Redis and HTTP clients."""
@@ -199,7 +199,7 @@ class ServiceDiscovery:
         except Exception as e:
             logger.error("Failed to deregister service", error=str(e))
 
-    async def discover_services(self, service_name: Optional[str] = None) -> List[ServiceInfo]:
+    async def discover_services(self, service_name: str | None = None) -> list[ServiceInfo]:
         """Discover services from Redis."""
         if not self.redis_client:
             raise RuntimeError("Redis client not connected")
@@ -237,7 +237,7 @@ class ServiceDiscovery:
             logger.error("Failed to discover services", error=str(e))
             return []
 
-    async def get_service(self, service_name: str) -> Optional[ServiceInfo]:
+    async def get_service(self, service_name: str) -> ServiceInfo | None:
         """Get specific service information."""
         services = await self.discover_services(service_name)
         return services[0] if services else None
