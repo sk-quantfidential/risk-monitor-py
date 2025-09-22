@@ -1,12 +1,10 @@
 """Tests for health endpoints (HTTP and gRPC)."""
+from unittest.mock import patch
+
 import pytest
-from datetime import datetime
-from unittest.mock import patch, MagicMock
-
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
-
 from grpc_health.v1 import health_pb2
+from httpx import AsyncClient
 
 from risk_monitor.presentation.grpc.services.health import HealthService
 

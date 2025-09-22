@@ -1,11 +1,11 @@
 """Integration tests for service discovery functionality."""
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
 
-from risk_monitor.infrastructure.service_discovery import ServiceDiscovery, ServiceInfo
+import pytest
+
 from risk_monitor.infrastructure.config import Settings
+from risk_monitor.infrastructure.service_discovery import ServiceDiscovery, ServiceInfo
 
 
 class TestServiceDiscoveryIntegration:
@@ -331,7 +331,7 @@ class TestServiceDiscoveryErrorHandling:
         await service_discovery.connect()
 
         # Mock timeout error
-        mock_redis.keys.side_effect = asyncio.TimeoutError("Redis timeout")
+        mock_redis.keys.side_effect = TimeoutError("Redis timeout")
 
         with pytest.raises(asyncio.TimeoutError):
             await service_discovery.discover_services()

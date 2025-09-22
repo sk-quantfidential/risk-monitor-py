@@ -1,10 +1,10 @@
 """Test configuration and fixtures."""
 import asyncio
-import pytest
-import pytest_asyncio
-from typing import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
@@ -13,7 +13,7 @@ from risk_monitor.presentation.http.app import create_fastapi_app
 
 
 @pytest.fixture(scope="session")
-def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
+def event_loop() -> Generator[asyncio.AbstractEventLoop]:
     """Create an instance of the default event loop for the test session."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
@@ -51,7 +51,7 @@ def test_client(fastapi_app) -> TestClient:
 
 
 @pytest_asyncio.fixture
-async def async_client(fastapi_app) -> AsyncGenerator[AsyncClient, None]:
+async def async_client(fastapi_app) -> AsyncGenerator[AsyncClient]:
     """Create async test client."""
     from httpx import ASGITransport
     async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as client:
@@ -125,8 +125,8 @@ def sample_portfolio_metrics():
 @pytest.fixture
 def grpc_test_server():
     """Create gRPC test server."""
-    from grpc_testing import server_from_dictionary
     from grpc_health.v1 import health_pb2_grpc
+    from grpc_testing import server_from_dictionary
 
     from risk_monitor.presentation.grpc.services.health import HealthService
 
