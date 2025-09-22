@@ -1,8 +1,5 @@
 """gRPC server implementation."""
-import asyncio
-from typing import Optional
 
-import grpc
 import structlog
 from grpc import aio
 from grpc_health.v1 import health_pb2_grpc
@@ -10,7 +7,10 @@ from grpc_reflection.v1alpha import reflection
 
 from risk_monitor.infrastructure.config import Settings
 from risk_monitor.presentation.grpc.services.health import HealthService
-from risk_monitor.presentation.grpc.services.risk import RiskAnalyticsService, PROTOBUF_AVAILABLE
+from risk_monitor.presentation.grpc.services.risk import (
+    PROTOBUF_AVAILABLE,
+    RiskAnalyticsService,
+)
 
 logger = structlog.get_logger()
 
@@ -20,7 +20,7 @@ class GrpcServer:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.server: Optional[aio.Server] = None
+        self.server: aio.Server | None = None
 
     async def start(self) -> None:
         """Start the gRPC server."""
@@ -35,7 +35,9 @@ class GrpcServer:
 
         if PROTOBUF_AVAILABLE:
             try:
-                from api.v1.analytics_service_pb2_grpc import add_AnalyticsServiceServicer_to_server
+                from api.v1.analytics_service_pb2_grpc import (
+                    add_AnalyticsServiceServicer_to_server,
+                )
 
                 analytics_service = RiskAnalyticsService()
                 add_AnalyticsServiceServicer_to_server(analytics_service, self.server)

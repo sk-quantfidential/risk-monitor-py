@@ -1,23 +1,25 @@
 """gRPC risk monitoring service implementation using AnalyticsService."""
 import asyncio
-from typing import AsyncGenerator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
-from grpc import aio
 from google.protobuf.timestamp_pb2 import Timestamp
 
 # Import protobuf generated classes
 try:
-    from api.v1.analytics_service_pb2_grpc import AnalyticsServiceServicer
     from api.v1.analytics_service_pb2 import (
-        GetRiskMetricsRequest, GetRiskMetricsResponse,
-        GetPortfolioRiskMetricsRequest, GetPortfolioRiskMetricsResponse,
-        RunStressTestsRequest, RunStressTestsResponse,
-        RiskMetricType, RiskCalculationParams
+        GetPortfolioRiskMetricsRequest,
+        GetPortfolioRiskMetricsResponse,
+        GetRiskMetricsRequest,
+        GetRiskMetricsResponse,
+        RiskCalculationParams,
+        RiskMetricType,
+        RunStressTestsRequest,
+        RunStressTestsResponse,
     )
+    from api.v1.analytics_service_pb2_grpc import AnalyticsServiceServicer
     from api.v1.common_responses_pb2 import ResponseStatus
-    from market.v1.risk_metrics_pb2 import RiskMetrics, PortfolioRiskMetrics
+    from market.v1.risk_metrics_pb2 import PortfolioRiskMetrics, RiskMetrics
     PROTOBUF_AVAILABLE = True
 except ImportError:
     # Fallback for when protobuf schemas are not available
@@ -56,7 +58,7 @@ class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else o
             risk_metrics = RiskMetrics(
                 id=f"risk_{request.instrument_id}_{int(datetime.now().timestamp())}",
                 instrument_id=request.instrument_id,
-                calculation_date=Timestamp(seconds=int(datetime.now(timezone.utc).timestamp())),
+                calculation_date=Timestamp(seconds=int(datetime.now(UTC).timestamp())),
                 calculation_method="Historical Simulation"
             )
 
@@ -108,7 +110,7 @@ class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else o
             portfolio_metrics = PortfolioRiskMetrics(
                 id=f"portfolio_risk_{request.portfolio_id}_{int(datetime.now().timestamp())}",
                 portfolio_id=request.portfolio_id,
-                calculation_date=Timestamp(seconds=int(datetime.now(timezone.utc).timestamp()))
+                calculation_date=Timestamp(seconds=int(datetime.now(UTC).timestamp()))
             )
 
             response = GetPortfolioRiskMetricsResponse(
@@ -206,7 +208,7 @@ class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else o
                 risk_metrics = RiskMetrics(
                     id=f"stream_risk_{int(datetime.now().timestamp())}",
                     instrument_id="STREAM",
-                    calculation_date=Timestamp(seconds=int(datetime.now(timezone.utc).timestamp()))
+                    calculation_date=Timestamp(seconds=int(datetime.now(UTC).timestamp()))
                 )
 
                 response = GetRiskMetricsResponse(
