@@ -323,7 +323,7 @@ class TradingEngineClient(BaseGrpcClient):
         return await self._make_call("get_current_positions", request, timeout)
 
 
-class TestCoordinatorClient(BaseGrpcClient):
+class CoordinatorGrpcClient(BaseGrpcClient):
     """gRPC client for test-coordinator-py service."""
 
     def __init__(self, host: str, port: int, settings: Settings):
@@ -390,7 +390,7 @@ class InterServiceClientManager:
         self.settings = settings
         self.service_discovery = service_discovery
         self._trading_client: Optional[TradingEngineClient] = None
-        self._test_coordinator_client: Optional[TestCoordinatorClient] = None
+        self._test_coordinator_client: Optional[CoordinatorGrpcClient] = None
         self._clients: Dict[str, BaseGrpcClient] = {}
         self.connection_pool_size = 0
         self._initialization_time: Optional[float] = None
@@ -480,7 +480,7 @@ class InterServiceClientManager:
             else:
                 raise ServiceCommunicationError(f"Connection failed: {e}")
 
-    async def get_test_coordinator_client(self, use_fallback: bool = False) -> TestCoordinatorClient:
+    async def get_test_coordinator_client(self, use_fallback: bool = False) -> CoordinatorGrpcClient:
         """Get or create test coordinator client."""
         if self._test_coordinator_client and self._test_coordinator_client.is_connected():
             return self._test_coordinator_client
@@ -500,7 +500,7 @@ class InterServiceClientManager:
                 port = getattr(self.settings, 'test_coordinator_grpc_port', DEFAULT_TEST_COORDINATOR_PORT)
 
             # Create and connect client
-            self._test_coordinator_client = TestCoordinatorClient(host, port, self.settings)
+            self._test_coordinator_client = CoordinatorGrpcClient(host, port, self.settings)
             await self._test_coordinator_client.connect()
 
             self._clients["test-coordinator"] = self._test_coordinator_client

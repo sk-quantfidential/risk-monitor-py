@@ -2,9 +2,6 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.hatch.metadata]
-allow-direct-references = true
-
 [project]
 name = "risk-monitor"
 version = "0.1.0"
@@ -17,13 +14,13 @@ dependencies = [
     "fastapi>=0.116.2",
     "uvicorn[standard]>=0.36.0",
 
-    # Pydantic v2 with latest features
+    # Pydantic v2 with settings
     "pydantic>=2.11.9",
     "pydantic-settings>=2.10.1",
 
     # gRPC with async support and health checking
     "grpcio>=1.74.1",
-    "grpcio-tools>=1.74.1`",
+    "grpcio-tools>=1.74.1",
     "grpcio-status>=1.68.0",
     "grpcio-health-checking>=1.74.0",
     "grpcio-reflection>=1.68.0",
@@ -60,7 +57,7 @@ requires-python = ">=3.13"
 
 [project.optional-dependencies]
 dev = [
-    # Testing framework
+    # Testing
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=7.0.0",
@@ -87,13 +84,19 @@ dev = [
     # Additional development tools
     "pre-commit>=4.0.0",
     "bandit>=1.8.0",
+
+    # Conda development tools
+    "conda-build>=25.7.0",
 ]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.version]
 path = "src/risk_monitor/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/risk_monitor"]
+packages = [{ include = "risk_monitor", from = "src" }]
 
 [tool.ruff]
 target-version = "py313"
@@ -117,7 +120,27 @@ python_functions = ["test_*"]
 addopts = [
     "--strict-markers",
     "--strict-config",
-    "--cov=src/risk_monitor",
+    "--cov=risk_monitor",
     "--cov-report=term-missing",
     "--cov-fail-under=85",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
 ]
