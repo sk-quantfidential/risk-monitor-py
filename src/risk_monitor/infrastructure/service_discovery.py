@@ -229,6 +229,16 @@ class ServiceDiscovery:
                             except ValueError:
                                 service_data[field] = 0.0
 
+                    # Filter out stale services (older than 3 health check intervals)
+                    if "last_heartbeat" in service_data:
+                        stale_threshold = time.time() - (self.settings.health_check_interval * 3)
+                        if service_data["last_heartbeat"] < stale_threshold:
+                            logger.debug("Filtering out stale service",
+                                       service=service_data.get("name", "unknown"),
+                                       last_heartbeat=service_data["last_heartbeat"],
+                                       threshold=stale_threshold)
+                            continue  # Skip stale services
+
                     services.append(ServiceInfo(**service_data))
 
             return services

@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import pytest_asyncio
 import httpx
 
 from risk_monitor.infrastructure.config import Settings
@@ -16,14 +17,61 @@ from risk_monitor.infrastructure.configuration_client import (
 class TestConfigurationServiceClientIntegration:
     """Integration tests for ConfigurationServiceClient."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def config_client(self, test_settings: Settings):
         """Create ConfigurationServiceClient instance for testing."""
-        # This should fail initially because ConfigurationServiceClient doesn't exist yet
-        client = ConfigurationServiceClient(test_settings)
-        await client.connect()
-        yield client
-        await client.disconnect()
+        with patch('httpx.AsyncClient') as mock_client_class:
+            # Mock the HTTP client
+            mock_client = AsyncMock()
+            mock_client_class.return_value = mock_client
+
+            # Mock successful health check response
+            mock_health_response = AsyncMock()
+            mock_health_response.is_success = True
+            mock_health_response.status_code = 200
+
+            # Mock configuration fetch response
+            mock_config_response = AsyncMock()
+            mock_config_response.is_success = True
+            mock_config_response.status_code = 200
+            # Make json() method synchronous to avoid coroutine issues
+            mock_config_response.json = lambda: {
+                "key": "risk.position_limits.max_exposure",
+                "value": "1000000",
+                "type": "number",
+                "environment": "testing"
+            }
+
+            # Configure different responses based on endpoint
+            def mock_get_side_effect(url, **kwargs):
+                if "/health" in url:
+                    return mock_health_response
+                else:
+                    # Create different responses based on environment parameter
+                    params = kwargs.get('params', {})
+                    environment = params.get('environment', 'testing')
+
+                    # Different mock response for production environment
+                    if environment == 'production':
+                        mock_prod_response = AsyncMock()
+                        mock_prod_response.is_success = True
+                        mock_prod_response.status_code = 200
+                        mock_prod_response.json = lambda: {
+                            "key": "risk.position_limits.max_exposure",
+                            "value": "2000000",  # Different value for production
+                            "type": "number",
+                            "environment": "production"
+                        }
+                        return mock_prod_response
+                    else:
+                        return mock_config_response
+
+            mock_client.get.side_effect = mock_get_side_effect
+
+            client = ConfigurationServiceClient(test_settings)
+            await client.connect()
+            yield client
+            await client.disconnect()
 
     @pytest.mark.asyncio
     async def test_configuration_client_lifecycle(self, config_client: ConfigurationServiceClient):
@@ -76,14 +124,24 @@ class TestConfigurationServiceClientIntegration:
         )
         mock_service_discovery.get_service.return_value = config_service_info
 
-        # This should fail because ConfigurationServiceClient doesn't integrate with service discovery yet
-        client = ConfigurationServiceClient(test_settings, service_discovery=mock_service_discovery)
-        await client.connect()
+        with patch('httpx.AsyncClient') as mock_client_class:
+            # Mock the HTTP client
+            mock_client = AsyncMock()
+            mock_client_class.return_value = mock_client
 
-        # Verify service discovery was used
-        mock_service_discovery.get_service.assert_called_with("configuration-service")
+            # Mock successful health check response
+            mock_health_response = AsyncMock()
+            mock_health_response.is_success = True
+            mock_health_response.status_code = 200
+            mock_client.get.return_value = mock_health_response
 
-        await client.disconnect()
+            client = ConfigurationServiceClient(test_settings, service_discovery=mock_service_discovery)
+            await client.connect()
+
+            # Verify service discovery was used
+            mock_service_discovery.get_service.assert_called_with("configuration-service")
+
+            await client.disconnect()
 
     @pytest.mark.asyncio
     async def test_configuration_cache_mechanism(self, config_client: ConfigurationServiceClient):
@@ -161,10 +219,11 @@ class TestConfigurationServiceClientIntegration:
         )
 
         assert config_value.environment == "testing"
-        assert config_value.value != await config_client.get_configuration(
+        production_config = await config_client.get_configuration(
             "risk.position_limits.max_exposure",
             environment="production"
-        ).value
+        )
+        assert config_value.value != production_config.value
 
 
 class TestConfigurationServiceClientErrorHandling:
@@ -173,26 +232,54 @@ class TestConfigurationServiceClientErrorHandling:
     @pytest.mark.asyncio
     async def test_invalid_configuration_key(self, test_settings: Settings):
         """Test handling of invalid configuration keys."""
-        client = ConfigurationServiceClient(test_settings)
-        await client.connect()
+        with patch('httpx.AsyncClient') as mock_client_class:
+            # Mock the HTTP client
+            mock_client = AsyncMock()
+            mock_client_class.return_value = mock_client
 
-        # This should fail because error handling doesn't exist yet
-        with pytest.raises(ConfigurationError, match="Invalid configuration key"):
-            await client.get_configuration("invalid..key..format")
+            # Mock successful health check response for connect()
+            mock_health_response = AsyncMock()
+            mock_health_response.is_success = True
+            mock_health_response.status_code = 200
+            mock_client.get.return_value = mock_health_response
 
-        await client.disconnect()
+            client = ConfigurationServiceClient(test_settings)
+            await client.connect()
+
+            # This should fail because error handling doesn't exist yet
+            with pytest.raises(ConfigurationError, match="Invalid configuration key"):
+                await client.get_configuration("invalid..key..format")
+
+            await client.disconnect()
 
     @pytest.mark.asyncio
     async def test_configuration_service_returns_error(self, test_settings: Settings):
         """Test handling when configuration service returns an error."""
-        client = ConfigurationServiceClient(test_settings)
+        with patch('httpx.AsyncClient') as mock_client_class:
+            # Mock the HTTP client
+            mock_client = AsyncMock()
+            mock_client_class.return_value = mock_client
 
-        with patch.object(client, '_http_client') as mock_http:
-            mock_response = AsyncMock()
-            mock_response.status_code = 500
-            mock_response.text = "Internal Server Error"
-            mock_http.get.return_value = mock_response
+            # Mock successful health check response for connect()
+            mock_health_response = AsyncMock()
+            mock_health_response.is_success = True
+            mock_health_response.status_code = 200
 
+            # Mock error response for configuration request
+            mock_error_response = AsyncMock()
+            mock_error_response.status_code = 500
+            mock_error_response.text = "Internal Server Error"
+
+            # Configure different responses based on endpoint
+            def mock_get_side_effect(url, **kwargs):
+                if "/health" in url:
+                    return mock_health_response
+                else:
+                    return mock_error_response
+
+            mock_client.get.side_effect = mock_get_side_effect
+
+            client = ConfigurationServiceClient(test_settings)
             await client.connect()
 
             # This should fail because error response handling doesn't exist yet
@@ -204,14 +291,32 @@ class TestConfigurationServiceClientErrorHandling:
     @pytest.mark.asyncio
     async def test_malformed_configuration_response(self, test_settings: Settings):
         """Test handling of malformed configuration responses."""
-        client = ConfigurationServiceClient(test_settings)
+        with patch('httpx.AsyncClient') as mock_client_class:
+            # Mock the HTTP client
+            mock_client = AsyncMock()
+            mock_client_class.return_value = mock_client
 
-        with patch.object(client, '_http_client') as mock_http:
-            mock_response = AsyncMock()
-            mock_response.status_code = 200
-            mock_response.json.return_value = {"invalid": "response_format"}
-            mock_http.get.return_value = mock_response
+            # Mock successful health check response for connect()
+            mock_health_response = AsyncMock()
+            mock_health_response.is_success = True
+            mock_health_response.status_code = 200
 
+            # Mock malformed configuration response
+            mock_malformed_response = AsyncMock()
+            mock_malformed_response.status_code = 200
+            # Make json() method synchronous to avoid coroutine issues
+            mock_malformed_response.json = lambda: {"invalid": "response_format"}
+
+            # Configure different responses based on endpoint
+            def mock_get_side_effect(url, **kwargs):
+                if "/health" in url:
+                    return mock_health_response
+                else:
+                    return mock_malformed_response
+
+            mock_client.get.side_effect = mock_get_side_effect
+
+            client = ConfigurationServiceClient(test_settings)
             await client.connect()
 
             # This should fail because response validation doesn't exist yet
