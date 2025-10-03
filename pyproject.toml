@@ -37,10 +37,8 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0.58b0",
     "opentelemetry-instrumentation-grpc>=0.58b0",
 
-    # Data persistence and caching
-    "redis>=6.4.0",
-    "asyncpg>=0.29.0",
-    "sqlalchemy[asyncio]>=2.0.0",
+    # Data persistence via risk-data-adapter
+    "risk-data-adapter @ file:///home/skingham/Projects/Quantfidential/trading-ecosystem/risk-data-adapter-py",
 
     # HTTP client and utilities
     "httpx>=0.28.1",
@@ -96,7 +94,7 @@ allow-direct-references = true
 path = "src/risk_monitor/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = [{ include = "risk_monitor", from = "src" }]
+packages = ["src/risk_monitor"]
 
 [tool.ruff]
 target-version = "py313"
