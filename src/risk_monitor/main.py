@@ -16,6 +16,8 @@ from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
+from risk_data_adapter import AdapterConfig, RiskDataAdapter, create_adapter
+
 from risk_monitor.infrastructure.config import get_settings
 from risk_monitor.infrastructure.logging import setup_logging
 from risk_monitor.infrastructure.service_discovery import ServiceDiscovery
@@ -33,6 +35,7 @@ class DualProtocolServer:
         self.http_server: uvicorn.Server | None = None
         self.grpc_server: Optional = None
         self.service_discovery: ServiceDiscovery | None = None
+        self.data_adapter: RiskDataAdapter | None = None
         self.shutdown_event = asyncio.Event()
 
     def setup_observability(self) -> None:
@@ -107,7 +110,15 @@ class DualProtocolServer:
 
         shutdown_tasks = []
 
-        # Deregister from service discovery first
+        # Disconnect data adapter first
+        if self.data_adapter:
+            logger.info("Disconnecting data adapter")
+            try:
+                await self.data_adapter.disconnect()
+            except Exception as e:
+                logger.warning("Data adapter cleanup failed", error=str(e))
+
+        # Deregister from service discovery
         if self.service_discovery:
             logger.info("Deregistering from service discovery")
             try:
@@ -129,6 +140,24 @@ class DualProtocolServer:
 
         logger.info("Risk Monitor service stopped")
 
+    async def setup_data_adapter(self) -> None:
+        """Setup and connect data adapter."""
+        try:
+            # Configure adapter with orchestrator credentials
+            adapter_config = AdapterConfig(
+                postgres_url=self.settings.database_url if hasattr(self.settings, 'database_url') else
+                            "postgresql+asyncpg://risk_adapter:risk-adapter-db-pass@localhost:5432/trading_ecosystem",
+                redis_url=self.settings.redis_url if hasattr(self.settings, 'redis_url') else
+                          "redis://risk-adapter:risk-pass@localhost:6379/0"
+            )
+
+            self.data_adapter = await create_adapter(adapter_config)
+            logger.info("Data adapter configured and connected")
+
+        except Exception as e:
+            logger.warning("Data adapter setup failed", error=str(e))
+            # Continue without data adapter (degraded mode)
+
     async def setup_service_discovery(self) -> None:
         """Setup and register with service discovery."""
         try:
@@ -148,6 +177,9 @@ class DualProtocolServer:
                     version=self.settings.version,
                     http_port=self.settings.http_port,
                     grpc_port=self.settings.grpc_port)
+
+        # Setup data adapter
+        await self.setup_data_adapter()
 
         # Setup service discovery
         await self.setup_service_discovery()
