@@ -78,4 +78,7 @@ def create_fastapi_app(settings: Settings) -> FastAPI:
     app.include_router(risk.router, prefix="/api/v1", tags=["risk"])
     app.include_router(metrics.router, prefix="/metrics", tags=["metrics"])
 
+    # Add convenience root-level health endpoint (redirects to /api/v1/health)
+    app.include_router(health.router, tags=["health-root"])
+
     return app

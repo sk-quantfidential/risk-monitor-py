@@ -1,3 +1,5 @@
+PULL_REQUEST*.md
+PR_*.md
 
 # Claude Configuration (IP separated)
 .claude-defaults/
@@ -6,6 +8,7 @@
 .gitmodules
 CLAUDE.md
 proto/
+AGENTS.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
