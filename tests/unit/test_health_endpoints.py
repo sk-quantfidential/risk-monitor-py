@@ -22,10 +22,11 @@ class TestHTTPHealthEndpoints:
         assert data["status"] == "healthy"
         assert "timestamp" in data
         assert "version" in data
-        assert "uptime_seconds" in data
-        assert "dependencies" in data
-        assert isinstance(data["uptime_seconds"], float)
-        assert data["uptime_seconds"] >= 0
+        assert "service" in data
+        assert "instance" in data
+        assert "environment" in data
+        assert data["service"] == "risk-monitor"
+        assert data["instance"] == "risk-monitor"
 
     def test_liveness_probe(self, test_client: TestClient):
         """Test Kubernetes liveness probe endpoint."""
@@ -66,9 +67,9 @@ class TestHTTPHealthEndpoints:
         response = test_client.get("/api/v1/health")
         data = response.json()
 
-        # Required fields
+        # Required fields (updated for TSE-0001.12.0 instance-aware health)
         required_fields = [
-            "status", "timestamp", "version", "uptime_seconds", "dependencies"
+            "status", "timestamp", "version", "service", "instance", "environment"
         ]
         for field in required_fields:
             assert field in data, f"Missing required field: {field}"
@@ -76,18 +77,19 @@ class TestHTTPHealthEndpoints:
         # Check data types
         assert isinstance(data["status"], str)
         assert isinstance(data["version"], str)
-        assert isinstance(data["uptime_seconds"], (int, float))
-        assert isinstance(data["dependencies"], dict)
+        assert isinstance(data["service"], str)
+        assert isinstance(data["instance"], str)
+        assert isinstance(data["environment"], str)
 
     def test_health_check_contains_service_info(self, test_client: TestClient):
         """Test that health check contains service information."""
         response = test_client.get("/api/v1/health")
         data = response.json()
 
-        # Should contain dependency status
-        assert "redis" in data["dependencies"]
-        assert "postgres" in data["dependencies"]
-        assert "service_registry" in data["dependencies"]
+        # Should contain service identity (updated for TSE-0001.12.0)
+        assert data["service"] == "risk-monitor"
+        assert data["instance"] == "risk-monitor"
+        assert data["environment"] == "development"
 
 
 class TestGRPCHealthService:
