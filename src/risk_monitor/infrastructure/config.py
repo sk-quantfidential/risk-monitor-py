@@ -27,8 +27,8 @@ class Settings(BaseSettings):
 
     # Server settings
     host: str = "0.0.0.0"
-    http_port: int = Field(default=8084, gt=0, le=65535)  # Risk Monitor HTTP port
-    grpc_port: int = Field(default=50054, gt=0, le=65535)  # Risk Monitor gRPC port
+    http_port: int = Field(default=8080, gt=0, le=65535)  # Standard HTTP port (docker-compose maps to external)
+    grpc_port: int = Field(default=50051, gt=0, le=65535)  # Standard gRPC port (docker-compose maps to external)
 
     # Logging settings
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"

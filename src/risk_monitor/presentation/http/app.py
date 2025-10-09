@@ -1,16 +1,20 @@
 """FastAPI application factory."""
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Optional
 
 import structlog
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
+from risk_monitor.domain.ports.metrics import MetricsPort
 from risk_monitor.infrastructure.config import Settings
+from risk_monitor.infrastructure.observability.metrics_middleware import (
+    create_red_metrics_middleware,
+)
 from risk_monitor.presentation.http.routers import health, metrics, risk
-from risk_monitor.presentation.shared.middleware import RequestTracker
 
 logger = structlog.get_logger()
 
@@ -29,8 +33,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger.info("Shutting down Risk Monitor HTTP server")
 
 
-def create_fastapi_app(settings: Settings) -> FastAPI:
-    """Create and configure FastAPI application."""
+def create_fastapi_app(
+    settings: Settings, metrics_port: Optional[MetricsPort] = None
+) -> FastAPI:
+    """Create and configure FastAPI application.
+
+    Args:
+        settings: Application settings
+        metrics_port: Optional MetricsPort for observability (Clean Architecture)
+    """
 
     app = FastAPI(
         title="Risk Monitor API",
@@ -40,8 +51,9 @@ def create_fastapi_app(settings: Settings) -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Store settings for access in lifespan
+    # Store settings and metrics_port for access in routes and middleware
     app.state.settings = settings
+    app.state.metrics_port = metrics_port
 
     # CORS middleware
     app.add_middleware(
@@ -55,23 +67,9 @@ def create_fastapi_app(settings: Settings) -> FastAPI:
     # OpenTelemetry instrumentation
     FastAPIInstrumentor.instrument_app(app)
 
-    # Request tracking middleware
-    @app.middleware("http")
-    async def track_requests(request: Request, call_next):
-        tracker = RequestTracker(
-            protocol="http",
-            method=request.method,
-            endpoint=str(request.url.path)
-        )
-
-        try:
-            response = await call_next(request)
-            tracker.track_completion(str(response.status_code))
-            return response
-        except Exception as e:
-            tracker.track_completion("error")
-            logger.error("Request failed", error=str(e), path=request.url.path)
-            raise
+    # RED metrics middleware (Clean Architecture: uses MetricsPort)
+    if metrics_port:
+        app.middleware("http")(create_red_metrics_middleware(metrics_port))
 
     # Include routers
     app.include_router(health.router, prefix="/api/v1", tags=["health"])

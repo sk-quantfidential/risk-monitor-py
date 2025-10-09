@@ -14,6 +14,9 @@ from risk_data_adapter import AdapterConfig, RiskDataAdapter, create_adapter
 
 from risk_monitor.infrastructure.config import get_settings
 from risk_monitor.infrastructure.logging import setup_logging
+from risk_monitor.infrastructure.observability.prometheus_adapter import (
+    PrometheusMetricsAdapter,
+)
 from risk_monitor.infrastructure.service_discovery import ServiceDiscovery
 from risk_monitor.presentation.grpc.server import create_grpc_server
 from risk_monitor.presentation.http.app import create_fastapi_app
@@ -76,7 +79,20 @@ class DualProtocolServer:
     async def start_http_server(self) -> None:
         """Start the HTTP server."""
         try:
-            app = create_fastapi_app(self.settings)
+            # Initialize Prometheus metrics adapter (Clean Architecture)
+            constant_labels = {
+                "service": self.settings.service_name,
+                "instance": self.settings.service_instance_name,
+                "version": self.settings.version,
+            }
+            metrics_port = PrometheusMetricsAdapter(constant_labels)
+            logger.info(
+                "Prometheus metrics adapter initialized",
+                service=self.settings.service_name,
+                instance=self.settings.service_instance_name,
+            )
+
+            app = create_fastapi_app(self.settings, metrics_port=metrics_port)
 
             config = uvicorn.Config(
                 app=app,
