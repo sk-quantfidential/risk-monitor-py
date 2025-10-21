@@ -666,7 +666,6 @@ def render_pnl_chart(self):
     st.plotly_chart(fig, use_container_width=True)
 ```
 
-
 ## 📊 Risk Signal Generation
 ### Compliance Signal Emission
 ```python
@@ -1058,7 +1057,6 @@ python ../project-plan/scripts/verify_setup.py
 - **Regulatory Requirements**: [Link to compliance documentation]
 - **API Integration Guide**: [Link to exchange/custodian API documentation]
 - **Dashboard Development**: [Link to Streamlit/Dash development guides]
-
 
 **Status**: 🚧 Development Phase
 **Maintainer**: [Your team]
