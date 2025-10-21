@@ -117,4 +117,3 @@ This document helps agents work effectively in this repository. It summarizes in
 - Keep telemetry optional and silent in tests.
 
 If you need more context, read `README.md` for the broader vision and use the tests as the ground truth for what must work today.
-
