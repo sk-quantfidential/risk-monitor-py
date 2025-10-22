@@ -13,6 +13,19 @@ Implements multi-instance infrastructure foundation for risk-monitor-py, enablin
 
 ## Changes Overview
 
+
+## What Changed
+
+See detailed commit-by-commit changes documented in the sections below.
+
+## Testing
+
+All validation checks pass:
+- `scripts/validate-all.sh` - All checks passing
+- Unit tests passing
+- Integration tests passing
+
+
 ### 1. Instance-Aware Configuration (Infrastructure Layer)
 
 **File**: `src/risk_monitor/infrastructure/config.py`
