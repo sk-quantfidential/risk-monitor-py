@@ -1,6 +1,6 @@
 # PR: Named Components Foundation (TSE-0001.12.0) - risk-monitor-py
 
-**Branch**: `feature/TSE-0001.12.0-named-components-foundation`
+**Branch**: `feature/epic-TSE-0001-named-components-foundation`
 **Epic**: TSE-0001 (Foundation Services & Infrastructure)
 **Status**: ✅ READY FOR REVIEW
 **Date**: 2025-10-08
