@@ -2,7 +2,7 @@
 
 **Epic:** TSE-0001 - Foundation Services & Infrastructure
 **Milestone:** TSE-0001.12.0b - Prometheus Metrics (Clean Architecture)
-**Branch:** `feature/TSE-0001.12.0b-prometheus-metrics-client`
+**Branch:** `feature/epic-TSE-0001-prometheus-metrics-client`
 **Status:** ✅ Ready for Review
 **Date:** 2025-10-09
 
