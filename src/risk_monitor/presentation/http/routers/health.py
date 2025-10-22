@@ -1,5 +1,5 @@
 """Health check endpoints for HTTP API."""
-import time
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
@@ -12,10 +12,11 @@ router = APIRouter()
 class HealthResponse(BaseModel):
     """Health check response model."""
     status: str
-    timestamp: str
+    service: str
+    instance: str
     version: str
-    uptime_seconds: float
-    dependencies: dict[str, str]
+    environment: str
+    timestamp: str
 
 
 class ReadinessResponse(BaseModel):
@@ -25,25 +26,18 @@ class ReadinessResponse(BaseModel):
     timestamp: str
 
 
-# Track service start time for uptime calculation
-SERVICE_START_TIME = time.time()
-
-
 @router.get("/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
-    """Basic health check endpoint."""
+    """Basic health check endpoint with instance awareness."""
     settings = get_settings()
 
     return HealthResponse(
         status="healthy",
-        timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        service=settings.service_name,
+        instance=settings.service_instance_name,
         version=settings.version,
-        uptime_seconds=round(time.time() - SERVICE_START_TIME, 2),
-        dependencies={
-            "redis": "unknown",
-            "postgres": "unknown",
-            "service_registry": "unknown"
-        }
+        environment=settings.environment,
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
 

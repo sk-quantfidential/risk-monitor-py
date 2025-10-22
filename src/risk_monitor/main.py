@@ -7,12 +7,6 @@ import structlog
 import uvicorn
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.instrumentation.asyncio import AsyncIOInstrumentor
-from opentelemetry.instrumentation.grpc import (
-    GrpcInstrumentorClient,
-    GrpcInstrumentorServer,
-)
-from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -38,29 +32,37 @@ class DualProtocolServer:
         self.data_adapter: RiskDataAdapter | None = None
         self.shutdown_event = asyncio.Event()
 
-    def setup_observability(self) -> None:
-        """Setup OpenTelemetry tracing and instrumentation."""
-        # Configure OpenTelemetry
-        trace.set_tracer_provider(TracerProvider())
-        tracer_provider = trace.get_tracer_provider()
-
-        # OTLP exporter
-        otlp_exporter = OTLPSpanExporter(
-            endpoint=self.settings.otel_exporter_endpoint,
-            insecure=self.settings.otel_insecure,
+        # Bind instance context to logger for all future logs
+        global logger
+        logger = logger.bind(
+            service_name=self.settings.service_name,
+            instance_name=self.settings.service_instance_name,
+            environment=self.settings.environment,
         )
 
-        span_processor = BatchSpanProcessor(otlp_exporter)
-        tracer_provider.add_span_processor(span_processor)
+        logger.info("Risk Monitor service initializing")
 
-        # Instrument libraries
-        AsyncIOInstrumentor().instrument()
-        GrpcInstrumentorClient().instrument()
-        GrpcInstrumentorServer().instrument()
-        RedisInstrumentor().instrument()
+    def setup_observability(self) -> None:
+        """Setup OpenTelemetry tracing and instrumentation."""
+        try:
+            # Configure OpenTelemetry
+            trace.set_tracer_provider(TracerProvider())
+            tracer_provider = trace.get_tracer_provider()
 
-        logger.info("OpenTelemetry instrumentation configured",
-                    endpoint=self.settings.otel_exporter_endpoint)
+            # OTLP exporter
+            otlp_exporter = OTLPSpanExporter(
+                endpoint=self.settings.otel_exporter_endpoint,
+                insecure=self.settings.otel_insecure,
+            )
+
+            span_processor = BatchSpanProcessor(otlp_exporter)
+            tracer_provider.add_span_processor(span_processor)
+
+            logger.info("OpenTelemetry instrumentation configured",
+                        endpoint=self.settings.otel_exporter_endpoint)
+        except Exception as e:
+            logger.warning("OpenTelemetry setup failed, continuing without tracing",
+                          error=str(e))
 
     def setup_signal_handlers(self) -> None:
         """Setup graceful shutdown signal handlers."""
@@ -143,12 +145,13 @@ class DualProtocolServer:
     async def setup_data_adapter(self) -> None:
         """Setup and connect data adapter."""
         try:
-            # Configure adapter with orchestrator credentials
+            # Configure adapter with settings from environment
             adapter_config = AdapterConfig(
-                postgres_url=self.settings.database_url if hasattr(self.settings, 'database_url') else
-                            "postgresql+asyncpg://risk_adapter:risk-adapter-db-pass@localhost:5432/trading_ecosystem",
-                redis_url=self.settings.redis_url if hasattr(self.settings, 'redis_url') else
-                          "redis://risk-adapter:risk-pass@localhost:6379/0"
+                service_name=self.settings.service_name,
+                service_instance_name=self.settings.service_instance_name,
+                environment=self.settings.environment,
+                postgres_url=self.settings.postgres_url,
+                redis_url=self.settings.redis_url,
             )
 
             self.data_adapter = await create_adapter(adapter_config)

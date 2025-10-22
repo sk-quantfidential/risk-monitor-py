@@ -90,6 +90,43 @@
 
 ---
 
+### 🏢 Milestone TSE-0001.12.0: Named Components Foundation (Multi-Instance Infrastructure)
+**Status**: ✅ **COMPLETED** (2025-10-08)
+**Priority**: High
+**Branch**: `feature/TSE-0001.12.0-named-components-foundation`
+
+**Completed Tasks**:
+- [x] Add service_instance_name to infrastructure/config.py
+- [x] Add environment field with "docker" support
+- [x] Update health endpoint with instance metadata (service, instance, environment, timestamp)
+- [x] Add structured logging with instance context binding
+- [x] Update Dockerfile for Docker build compatibility
+- [x] Add opentelemetry-exporter-otlp-proto-grpc dependency
+- [x] Add field_validator for case-insensitive log_level
+- [x] Fix data adapter configuration initialization
+- [x] Add convenience root-level /health endpoint
+- [x] Create comprehensive startup tests (15/15 passing)
+- [x] Validate Clean Architecture compliance
+
+**Deliverables**:
+- ✅ Instance-aware configuration (singleton and multi-instance ready)
+- ✅ Health endpoint returns: service, instance, version, environment, timestamp
+- ✅ Structured logging includes instance context in all logs
+- ✅ Docker deployment with proper environment variables
+- ✅ 15 startup tests validating instance awareness
+- ✅ 100% Clean Architecture compliance (no domain contamination)
+
+**BDD Acceptance**: ✅ Risk Monitor can be deployed as singleton (risk-monitor) or multi-instance (risk-monitor-LH, risk-monitor-Alpha) with automatic schema/namespace derivation via risk-data-adapter-py
+
+**Dependencies**: TSE-0001.4.4 (Risk Monitor Data Adapter Integration)
+
+**Integration Points**:
+- risk-data-adapter-py: Derives PostgreSQL schema ("risk") and Redis namespace ("risk") from instance name
+- orchestrator-docker: Deployed with SERVICE_INSTANCE_NAME=risk-monitor (singleton)
+- Prometheus: Scrapes metrics with instance_name label
+
+---
+
 ### ⚠️ Milestone TSE-0001.7a: Risk Monitor Data Collection (PRIMARY)
 **Status**: Not Started
 **Priority**: CRITICAL - Production-like data integration

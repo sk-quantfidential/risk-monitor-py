@@ -1,5 +1,7 @@
 """Health check endpoints for Risk Monitor service."""
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, status
 from pydantic import BaseModel
 
@@ -14,7 +16,10 @@ class HealthResponse(BaseModel):
     """Health check response model."""
     status: str
     service: str
+    instance: str  # NEW: Instance identifier
     version: str
+    environment: str  # NEW: Deployment environment
+    timestamp: str  # NEW: ISO8601 timestamp
 
 
 class ReadinessResponse(BaseModel):
@@ -25,15 +30,18 @@ class ReadinessResponse(BaseModel):
 
 @router.get("/health", status_code=status.HTTP_200_OK, response_model=HealthResponse)
 async def health_check() -> HealthResponse:
-    """Basic health check endpoint."""
+    """Basic health check endpoint with instance awareness."""
     settings = get_settings()
 
     logger.info("Health check requested")
 
     return HealthResponse(
         status="healthy",
-        service="risk-monitor",
+        service=settings.service_name,
+        instance=settings.service_instance_name,  # NEW
         version=settings.version,
+        environment=settings.environment,  # NEW
+        timestamp=datetime.now(timezone.utc).isoformat(),  # NEW
     )
 
 

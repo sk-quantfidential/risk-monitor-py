@@ -36,6 +36,7 @@ dependencies = [
     "opentelemetry-sdk>=1.37.0",
     "opentelemetry-instrumentation-fastapi>=0.58b0",
     "opentelemetry-instrumentation-grpc>=0.58b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.37.0",
 
     # Data persistence via risk-data-adapter
     "risk-data-adapter @ file:///home/skingham/Projects/Quantfidential/trading-ecosystem/risk-data-adapter-py",
