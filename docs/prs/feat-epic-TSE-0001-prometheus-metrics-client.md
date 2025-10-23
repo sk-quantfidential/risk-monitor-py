@@ -57,7 +57,7 @@ This PR implements Prometheus metrics collection for risk-monitor-py using **Cle
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Changes
+## What Changed
 
 ### 1. Domain Layer - MetricsPort Interface (NEW)
 
