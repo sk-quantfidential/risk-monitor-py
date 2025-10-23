@@ -11,7 +11,7 @@ Implements multi-instance infrastructure foundation for risk-monitor-py, enablin
 
 **Key Achievement**: Service can now be deployed with instance-specific configuration while maintaining Clean Architecture principles and backward compatibility.
 
-## Changes Overview
+## What Changed
 
 ## What Changed
 
