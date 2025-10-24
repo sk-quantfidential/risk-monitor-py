@@ -1,8 +1,9 @@
 """Configuration management for Risk Monitor service."""
+import re
 from functools import lru_cache
 from typing import Any, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -72,6 +73,27 @@ class Settings(BaseSettings):
         # Backward compatibility: Default service_instance_name to service_name (singleton pattern)
         if not self.service_instance_name:
             self.service_instance_name = self.service_name
+
+    @model_validator(mode='after')
+    def validate_instance_name(self) -> 'Settings':
+        """Validate instance name is DNS-safe after all initialization."""
+        name = self.service_instance_name
+
+        if not name:
+            raise ValueError("instance name cannot be empty after initialization")
+
+        # DNS-safe pattern: lowercase alphanumeric + hyphens, must start/end with alphanumeric
+        if not re.match(r'^[a-z0-9]([a-z0-9-]*[a-z0-9])?$', name):
+            raise ValueError(
+                f"instance name must be DNS-safe: lowercase, alphanumeric, "
+                f"hyphens only, must start and end with letter or number (got: {name})"
+            )
+
+        # Max 63 characters (DNS label limit)
+        if len(name) > 63:
+            raise ValueError(f"instance name exceeds 63 character limit (got: {len(name)} characters)")
+
+        return self
 
 
 @lru_cache
