@@ -70,5 +70,5 @@ async def readiness_check() -> ReadinessResponse:
     return ReadinessResponse(
         ready=ready,
         checks=checks,
-        timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        timestamp=datetime.now(timezone.utc).isoformat()
     )

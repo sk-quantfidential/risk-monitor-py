@@ -52,8 +52,8 @@ USER app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8084/health')" || exit 1
+    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/v1/health')" || exit 1
 
-EXPOSE 8084 50054
+EXPOSE 8080 50051
 
 CMD ["python", "-m", "risk_monitor.main"]

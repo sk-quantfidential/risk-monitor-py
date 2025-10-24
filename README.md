@@ -964,7 +964,7 @@ COPY . .
 RUN pip install -e .
 
 # Expose ports for API and dashboard
-EXPOSE 8080 50055
+EXPOSE 8080 50051
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
