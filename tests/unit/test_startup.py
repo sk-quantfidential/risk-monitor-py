@@ -199,11 +199,11 @@ class TestInstanceAwareConfiguration:
         """
         settings = Settings(
             service_name="risk-monitor",
-            service_instance_name="risk-monitor-LH",
+            service_instance_name="risk-monitor-lh",  # Must be lowercase per DNS-safe validation
         )
 
         assert settings.service_name == "risk-monitor"
-        assert settings.service_instance_name == "risk-monitor-LH"
+        assert settings.service_instance_name == "risk-monitor-lh"
 
     def test_environment_docker_support(self):
         """Test 'docker' environment is supported.

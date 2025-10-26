@@ -66,8 +66,7 @@ class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else o
                 risk_metrics=risk_metrics,
                 status=ResponseStatus(
                     code=0,
-                    message="Success",
-                    success=True
+                    message="Success"
                 )
             )
 
@@ -117,8 +116,7 @@ class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else o
                 portfolio_metrics=portfolio_metrics,
                 status=ResponseStatus(
                     code=0,
-                    message="Success",
-                    success=True
+                    message="Success"
                 )
             )
 
@@ -170,8 +168,7 @@ class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else o
                 results=results,
                 status=ResponseStatus(
                     code=0,
-                    message="Stress tests completed",
-                    success=True
+                    message="Stress tests completed"
                 )
             )
 
@@ -215,8 +212,7 @@ class RiskAnalyticsService(AnalyticsServiceServicer if PROTOBUF_AVAILABLE else o
                     risk_metrics=risk_metrics,
                     status=ResponseStatus(
                         code=0,
-                        message="Streaming risk metrics",
-                        success=True
+                        message="Streaming risk metrics"
                     )
                 )
 
