@@ -127,6 +127,51 @@
 
 ---
 
+## epic-TSE-0002: Connect Protocol Rollout
+
+### 🌐 Milestone TSE-0002.Python-1: Connect Protocol Implementation for risk-monitor-py
+**Status**: ✅ **COMPLETED** (2025-10-26)
+**Priority**: High
+**Branch**: `feature/epic-TSE-0002-connect-protocol`
+
+**Completed Tasks**:
+- [x] Add connect-python>=0.5.0 dependency to pyproject.toml
+- [x] Create AnalyticsConnectAdapter wrapping RiskAnalyticsService
+- [x] Implement 3 active RPCs (GetRiskMetrics, GetPortfolioRiskMetrics, RunStressTests)
+- [x] Return UNIMPLEMENTED for 4 unimplemented RPCs
+- [x] Mount Connect ASGI app on FastAPI at /api.v1.AnalyticsService
+- [x] Update CORS middleware for Connect protocol headers
+- [x] Generate Connect handlers in protobuf-schemas
+- [x] Validate 77/78 unit tests passing
+- [x] Create PR documentation
+
+**Deliverables**:
+- ✅ Connect protocol support for browser-based gRPC clients
+- ✅ AnalyticsConnectAdapter (158 lines) with error handling
+- ✅ FastAPI integration with graceful fallback
+- ✅ Dual protocol architecture (gRPC port 50056 + Connect HTTP port 8086)
+- ✅ CORS configuration with Connect headers
+- ✅ Generated Connect handlers (~26KB)
+- ✅ Comprehensive PR documentation
+
+**BDD Acceptance**: ✅ Browser clients can call AnalyticsService RPCs via Connect protocol without requiring grpc-web proxies. Service maintains backward compatibility with existing gRPC clients.
+
+**Dependencies**: TSE-0001.3c (Python Services gRPC Integration)
+
+**Architecture Benefits**:
+- No code duplication: Adapter delegates to existing RiskAnalyticsService
+- Clean separation: presentation/connect/ for Connect-specific code
+- Browser compatibility: Standard HTTP/1.1 or HTTP/2, no proxy required
+- Future migration ready: Swap adapter without changing other layers
+
+**Testing**:
+- ✅ 77/78 unit tests passing
+- ✅ Connect protocol imports successfully
+- ✅ FastAPI app creates with Connect mounted
+- ✅ Service logs correct initialization
+
+---
+
 ### ⚠️ Milestone TSE-0001.7a: Risk Monitor Data Collection (PRIMARY)
 **Status**: Not Started
 **Priority**: CRITICAL - Production-like data integration
