@@ -76,6 +76,7 @@
 - [x] Integration test suite (8/8 passing)
 - [x] Unit test validation (44/44 passing, no regressions)
 - [x] Code quality improvements (datetime deprecation, Redis aclose)
+- [x] Updated `scripts/create-pr` to pick up correct PR.
 
 **Deliverables**:
 - ✅ risk-data-adapter-py: 6 interfaces, 4 models, stub pattern, 20 tests
