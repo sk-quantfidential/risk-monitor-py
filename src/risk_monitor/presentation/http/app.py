@@ -16,6 +16,15 @@ from risk_monitor.infrastructure.observability.metrics_middleware import (
 )
 from risk_monitor.presentation.http.routers import health, metrics, risk
 
+# Connect protocol imports
+try:
+    from api.v1.analytics_service_connect import AnalyticsServiceASGIApplication
+    from risk_monitor.presentation.connect.analytics_adapter import AnalyticsConnectAdapter
+    from risk_monitor.presentation.grpc.services.risk import RiskAnalyticsService
+    CONNECT_AVAILABLE = True
+except ImportError:
+    CONNECT_AVAILABLE = False
+
 logger = structlog.get_logger()
 
 
@@ -55,13 +64,14 @@ def create_fastapi_app(
     app.state.settings = settings
     app.state.metrics_port = metrics_port
 
-    # CORS middleware
+    # CORS middleware with Connect protocol headers
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"] if settings.debug else ["http://localhost:3000"],
         allow_credentials=True,
         allow_methods=["*"],
-        allow_headers=["*"],
+        allow_headers=["*", "Connect-Protocol-Version", "Connect-Timeout-Ms"],
+        expose_headers=["Connect-Protocol-Version"],
     )
 
     # OpenTelemetry instrumentation
@@ -78,5 +88,27 @@ def create_fastapi_app(
 
     # Add convenience root-level health endpoint (redirects to /api/v1/health)
     app.include_router(health.router, tags=["health-root"])
+
+    # Register Connect protocol handlers for browser clients
+    if CONNECT_AVAILABLE:
+        try:
+            # Create gRPC service instance
+            grpc_service = RiskAnalyticsService()
+
+            # Create Connect adapter
+            connect_adapter = AnalyticsConnectAdapter(grpc_service)
+
+            # Create Connect ASGI application
+            connect_app = AnalyticsServiceASGIApplication(connect_adapter)
+
+            # Mount Connect app on FastAPI
+            app.mount("/api.v1.AnalyticsService", connect_app)
+
+            logger.info("Connect protocol handlers mounted for AnalyticsService",
+                       path="/api.v1.AnalyticsService")
+        except Exception as e:
+            logger.error("Failed to mount Connect handlers", error=str(e))
+    else:
+        logger.warning("Connect protocol not available (missing dependencies)")
 
     return app

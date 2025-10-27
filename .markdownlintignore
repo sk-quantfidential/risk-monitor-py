@@ -1,0 +1,17 @@
+# Markdownlint ignore file
+# Paths are relative to repository root
+
+# Virtual environment - contains third-party packages with their own markdown
+.venv/
+*/.venv/
+
+# Node modules (if present)
+node_modules/
+
+# Build and distribution directories
+dist/
+build/
+out/
+
+# Generated documentation
+docs/api/
