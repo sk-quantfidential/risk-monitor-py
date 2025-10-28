@@ -6,6 +6,27 @@
 
 Comprehensive fix for pytest-asyncio compatibility issues that were causing test failures and "Event loop is closed" errors. This PR establishes a robust, clean test suite with proper async fixture management and modern pytest-asyncio patterns.
 
+## What Changed
+
+### risk-monitor-py
+
+**Test Infrastructure Fixes**:
+- Updated to modern `@pytest_asyncio.fixture` decorators
+- Added asyncio configuration in pyproject.toml
+- Fixed event loop closure errors in BaseGrpcClient tests
+- Resolved coroutine attribute errors with proper awaiting
+
+**Test Suite Improvements**:
+- Fixed BaseGrpcClient abstract class instantiation
+- Comprehensive gRPC channel and health check mocking
+- Proper Redis client mocking patterns
+- Fixed ServiceDiscovery fixture parameter compatibility
+
+**Quality & Reliability**:
+- All 44 tests passing with proper async handling
+- No deprecation warnings
+- Clean test output with proper teardown
+
 ## 🐛 Problem Statement
 
 The test suite was experiencing multiple issues:

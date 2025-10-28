@@ -14,6 +14,35 @@ Integrated risk-data-adapter-py persistence layer with risk-monitor-py service, 
 
 ---
 
+## What Changed
+
+### risk-data-adapter-py (NEW package)
+
+**Repository Interfaces** (6 interfaces, 61 methods total):
+- RiskMetricsRepository (10 methods)
+- RiskAlertsRepository (15 methods)
+- RiskLimitsRepository (14 methods)
+- PositionSnapshotsRepository (12 methods)
+- ServiceDiscoveryRepository (5 methods)
+- CacheRepository (5 methods)
+
+**Testing**: 20/20 tests passing (100% coverage)
+
+### risk-monitor-py
+
+**Data Layer Integration**:
+- Integrated risk-data-adapter-py for all persistence operations
+- Updated configuration for PostgreSQL schema (risk)
+- Updated configuration for Redis namespace (redis_risk)
+- DataAdapter initialization in application startup
+
+**Graceful Degradation**:
+- Stub repositories when infrastructure unavailable
+- Comprehensive error handling
+- Service continues operating in degraded mode
+
+---
+
 ## Components Modified
 
 ### 1. risk-data-adapter-py (NEW)

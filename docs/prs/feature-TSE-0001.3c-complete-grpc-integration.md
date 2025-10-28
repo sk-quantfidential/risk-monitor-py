@@ -6,6 +6,27 @@
 
 Complete implementation of TSE-0001.3c milestone for risk-monitor-py, delivering production-ready gRPC integration following full TDD Red-Green-Refactor cycle.
 
+## What Changed
+
+### risk-monitor-py
+
+**Infrastructure Layer**:
+- ConfigurationServiceClient with caching and validation
+- Service discovery integration with health checks
+- Inter-service gRPC client communication (TradingEngine, AuditCorrelator)
+- Environment-based configuration management
+
+**Testing**:
+- Full TDD Red-Green-Refactor cycle
+- 44 comprehensive tests with proper async fixtures
+- Cache statistics and performance monitoring
+- Detailed error handling with context
+
+**Architecture**:
+- Clean separation of concerns
+- Graceful degradation when services unavailable
+- Multi-environment support
+
 ## 🏆 BDD Acceptance Criteria
 
 ✅ **VALIDATED**: "Python services can discover and communicate with each other via gRPC"
