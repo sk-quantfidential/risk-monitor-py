@@ -2,14 +2,15 @@
 
 > **Note**: Completed milestones are archived in [TODO-HISTORY.md](./TODO-HISTORY.md). This file tracks active and future work.
 
-
 ## epic-TSE-0001: Foundation Services & Infrastructure
 
 ### 🏗️ Milestone TSE-0001.1b: Python Services Bootstrapping
+
 **Status**: ✅ COMPLETED
 **Priority**: High
 
 **Tasks**:
+
 - [x] Create Python service directory structure following clean architecture
 - [x] Implement health check endpoint (REST and gRPC)
 - [x] Basic structured logging with levels
@@ -22,11 +23,13 @@
 ---
 
 ### 🔗 Milestone TSE-0001.3c: Python Services gRPC Integration
+
 **Status**: ✅ **COMPLETED** (100% complete - ALL tasks done!)
 **Priority**: High ➡️ DELIVERED
 **Branch**: `feature/TSE-0001.3c-complete-grpc-integration` ✅ READY FOR MERGE
 
 **Completed Tasks** (Full TDD Red-Green-Refactor Cycle):
+
 - [x] **Task 1**: Create failing tests for configuration service client integration ✅ (RED phase)
 - [x] **Task 2**: Implement configuration service client to make tests pass ✅ (GREEN phase)
 - [x] **Task 3**: Create failing tests for inter-service communication ✅ (RED phase)
@@ -35,6 +38,7 @@
 - [x] **Task 6**: Validate BDD acceptance criteria and create completion documentation ✅ (VALIDATION)
 
 **FINAL IMPLEMENTATION INCLUDES**:
+
 - ✅ ConfigurationServiceClient with caching, validation, and performance monitoring
 - ✅ InterServiceClientManager with connection pooling and circuit breaker patterns
 - ✅ TradingEngineClient and TestCoordinatorClient with full gRPC capabilities
@@ -50,6 +54,7 @@
 **Dependencies**: TSE-0001.1b (Python Services Bootstrapping), TSE-0001.3a (Core Infrastructure)
 
 **Technical Implementation Details**:
+
 - **Configuration Service Client**: Create client to fetch configuration from central config service
 - **Service Discovery Integration**: Use existing ServiceDiscovery to find configuration service endpoint
 - **Inter-Service Communication**: Implement gRPC client calls to other Python services (trading-engine, test-coordinator)
@@ -60,11 +65,13 @@
 ---
 
 ### 📊 Milestone TSE-0001.4.4: Risk Monitor Data Adapter Integration
+
 **Status**: ✅ **COMPLETED** (2025-10-03)
 **Priority**: High
 **Branch**: `refactor/epic-TSE-0001.4-data-adapters-and-orchestrator`
 
 **Completed Tasks**:
+
 - [x] Create risk-data-adapter-py component with repository pattern
 - [x] Implement 6 repository interfaces (61 methods total)
 - [x] Create 4 domain models with Pydantic v2 validation
@@ -82,6 +89,7 @@
 - [x] Updated `scripts/create-pr` to pick up correct PR.
 
 **Deliverables**:
+
 - ✅ risk-data-adapter-py: 6 interfaces, 4 models, stub pattern, 20 tests
 - ✅ PostgreSQL: risk schema (metrics, alerts, limits, position_snapshots)
 - ✅ Redis: risk-adapter ACL user with +ping permission
@@ -177,10 +185,12 @@
 ---
 
 ### ⚠️ Milestone TSE-0001.7a: Risk Monitor Data Collection (PRIMARY)
+
 **Status**: Not Started
 **Priority**: CRITICAL - Production-like data integration
 
 **Tasks**:
+
 - [ ] Position tracking from exchange APIs
 - [ ] Balance tracking from custodian APIs
 - [ ] Real-time market data feed integration
@@ -195,10 +205,12 @@
 ---
 
 ### ⚠️ Milestone TSE-0001.7b: Risk Monitor Alert Generation (PRIMARY)
+
 **Status**: Not Started
 **Priority**: CRITICAL - Core risk monitoring functionality
 
 **Tasks**:
+
 - [ ] Basic P&L calculation from market data
 - [ ] Simple threshold monitoring (position limits)
 - [ ] Alert generation and notification system
@@ -213,10 +225,12 @@
 ---
 
 ### 📈 Milestone TSE-0001.12a: Data Flow Integration
+
 **Status**: Not Started
 **Priority**: Medium
 
 **Tasks**:
+
 - [ ] Integration with complete trading flow validation
 - [ ] Risk alert correlation with audit system
 - [ ] End-to-end risk monitoring validation
@@ -229,10 +243,12 @@
 ---
 
 ### 📈 Milestone TSE-0001.12b: Trading Flow Integration
+
 **Status**: Not Started
 **Priority**: Medium
 
 **Tasks**:
+
 - [ ] Risk monitoring during trading validation
 - [ ] Real-time position and P&L tracking during trades
 - [ ] Alert generation during active trading scenarios

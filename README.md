@@ -7,6 +7,7 @@ A production-grade risk monitoring system built in Python that provides real-tim
 The Risk Monitor operates exactly like a real-world institutional risk system with strict production-like constraints. It can only access external-facing APIs from exchanges, custodians, and market data providers - just like a real risk system would in production. It continuously monitors positions, P&L, exposures, and compliance violations while emitting its own telemetry for audit correlation.
 
 ### Key Features
+
 - **Production-Realistic Constraints**: Only accesses external APIs (exchanges, custodians, market data)
 - **Real-Time Risk Surveillance**: Continuous monitoring of positions, P&L, and exposures
 - **Compliance Alerting**: Automated detection and escalation of risk limit breaches
@@ -55,12 +56,14 @@ The Risk Monitor operates exactly like a real-world institutional risk system wi
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.13+
 - Docker and Docker Compose
 - Poetry (for dependency management)
 - Access to market data APIs
 
 ### Development Setup
+
 ```bash
 # Clone the repository
 git clone <repo-url>
@@ -84,6 +87,7 @@ make run-dev
 ```
 
 ### Docker Deployment
+
 ```bash
 # Build container
 docker build -t risk-monitor .
@@ -104,6 +108,7 @@ curl http://localhost:8080/api/v1/risk/status
 ### gRPC Services
 
 #### Risk Monitoring Service
+
 ```protobuf
 service RiskMonitoringService {
   rpc GetRiskStatus(RiskStatusRequest) returns (RiskStatus);
@@ -115,6 +120,7 @@ service RiskMonitoringService {
 ```
 
 #### Alert Management Service
+
 ```protobuf
 service AlertManagementService {
   rpc AcknowledgeAlert(AckAlertRequest) returns (AckAlertResponse);
@@ -127,6 +133,7 @@ service AlertManagementService {
 ### REST Endpoints
 
 #### Production APIs (Management & Monitoring)
+
 ```
 GET    /api/v1/risk/status
 GET    /api/v1/positions/summary
@@ -140,6 +147,7 @@ POST   /api/v1/emergency/circuit-breaker
 ```
 
 #### Dashboard APIs (Real-time Visualization)
+
 ```
 GET    /api/v1/dashboard/risk-metrics
 GET    /api/v1/dashboard/position-heatmap
@@ -149,6 +157,7 @@ WebSocket /ws/risk-updates (Real-time risk data stream)
 ```
 
 #### Reporting APIs (Historical Analysis)
+
 ```
 GET    /api/v1/reports/daily-risk-summary
 GET    /api/v1/reports/limit-breach-history
@@ -157,6 +166,7 @@ GET    /api/v1/reports/compliance-audit-trail
 ```
 
 #### State Inspection APIs (Development/Audit)
+
 ```
 GET    /debug/data-sources/status
 GET    /debug/risk-calculations
@@ -166,6 +176,7 @@ GET    /metrics (Prometheus format)
 ```
 
 ### Health & Status APIs
+
 ```
 GET    /health
 GET    /api/v1/system/status
@@ -176,6 +187,7 @@ GET    /metrics (Prometheus format)
 ## 🏦 External Data Integration
 
 ### Exchange API Integration
+
 ```python
 class ExchangeDataProvider:
     """Interfaces with exchange APIs to get account data"""
@@ -201,6 +213,7 @@ class ExchangeDataProvider:
 ```
 
 ### Custodian API Integration
+
 ```python
 class CustodianDataProvider:
     """Interfaces with custodian APIs for master account data"""
@@ -221,6 +234,7 @@ class CustodianDataProvider:
 ```
 
 ### Market Data Integration
+
 ```python
 class MarketDataProvider:
     """Interfaces with market data APIs for pricing"""
@@ -237,6 +251,7 @@ class MarketDataProvider:
 ## 📊 Risk Calculation Engine
 
 ### Position Aggregation
+
 ```python
 class PositionAggregator:
     """Aggregates positions across all venues and accounts"""
@@ -265,6 +280,7 @@ class PositionAggregator:
 ```
 
 ### P&L Calculation
+
 ```python
 class PnLCalculator:
     """Real-time P&L calculation and attribution"""
@@ -296,6 +312,7 @@ class PnLCalculator:
 ```
 
 ### Delta Risk Calculation
+
 ```python
 class DeltaRiskCalculator:
     """Calculate net underlying exposure (delta) across all positions"""
@@ -329,6 +346,7 @@ class DeltaRiskCalculator:
 ## 🚨 Compliance & Alerting System
 
 ### Risk Limit Configuration
+
 ```yaml
 # risk_limits.yaml
 risk_limits:
@@ -400,6 +418,7 @@ alert_configuration:
 ```
 
 ### Risk Limit Monitoring
+
 ```python
 class RiskLimitMonitor:
     """Monitors positions against configured risk limits"""
@@ -458,6 +477,7 @@ class RiskLimitMonitor:
 ```
 
 ### Alert Management System
+
 ```python
 class AlertManager:
     """Manages risk alert generation, routing, and escalation"""
@@ -508,6 +528,7 @@ class AlertManager:
 ```
 
 ### Circuit Breaker System
+
 ```python
 class CircuitBreaker:
     """Emergency position management and trading halt capabilities"""
@@ -556,6 +577,7 @@ class CircuitBreaker:
 ## 📈 Risk Dashboard & Visualization
 
 ### Real-Time Dashboard Server
+
 ```python
 class RiskDashboardServer:
     """Serves real-time risk dashboard and WebSocket updates"""
@@ -597,6 +619,7 @@ class RiskDashboardServer:
 ```
 
 ### Dashboard Metrics Configuration
+
 ```yaml
 # dashboard_config.yaml
 dashboard:
@@ -626,6 +649,7 @@ dashboard:
 ```
 
 ### Portfolio Visualization
+
 ```python
 def render_pnl_chart(self):
     """Real-time P&L chart"""
@@ -667,7 +691,9 @@ def render_pnl_chart(self):
 ```
 
 ## 📊 Risk Signal Generation
+
 ### Compliance Signal Emission
+
 ```python
 class RiskSignalPublisher:
     """Publishes risk compliance signals for audit correlation"""
@@ -722,6 +748,7 @@ class RiskSignalPublisher:
 ## 📊 Monitoring & Observability
 
 ### Prometheus Metrics (Compliance Signals)
+
 ```python
 # Risk Monitor's own compliance signals for audit correlation
 risk_compliance_status = Gauge('risk_compliance_status', 'Risk compliance status', ['mandate', 'symbol'])
@@ -737,6 +764,7 @@ risk_data_staleness = Gauge('risk_data_staleness_seconds', 'Age of risk data', [
 ```
 
 ### Audit Trail Logging
+
 ```json
 {
   "timestamp": "2025-09-16T14:23:45.123Z",
@@ -763,6 +791,7 @@ risk_data_staleness = Gauge('risk_data_staleness_seconds', 'Age of risk data', [
 ## 🧪 Testing
 
 ### Risk Calculation Testing
+
 ```python
 class TestRiskCalculations(unittest.TestCase):
     def setUp(self):
@@ -796,6 +825,7 @@ class TestRiskCalculations(unittest.TestCase):
 ```
 
 ### Integration Testing
+
 ```bash
 # Test with mock external APIs
 make test-integration
@@ -813,6 +843,7 @@ make test-dashboard-websockets
 ## ⚙️ Configuration
 
 ### Environment Variables
+
 ```bash
 # Core settings
 RISK_MONITOR_PORT=8080
@@ -837,6 +868,7 @@ REGULATORY_REPORTING_ENABLED=true
 ```
 
 ### Risk Monitor Configuration
+
 ```yaml
 # risk_monitor_config.yaml
 monitoring:
@@ -883,6 +915,7 @@ alerting:
 ```
 
 ### Risk Limits Configuration
+
 ```yaml
 # risk_limits.yaml
 risk_limits:
@@ -941,6 +974,7 @@ alert_configuration:
 ## 🐳 Docker Configuration
 
 ### Dockerfile
+
 ```dockerfile
 FROM python:3.13-slim as builder
 
@@ -974,6 +1008,7 @@ CMD ["python", "-m", "risk_monitor.main"]
 ```
 
 ### Health Checks
+
 ```yaml
 healthcheck:
   test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health').raise_for_status()"]
@@ -986,12 +1021,14 @@ healthcheck:
 ## 🔒 Security & Compliance
 
 ### API Security
+
 - **Secure Credential Storage**: API keys stored in environment variables or secret management
 - **Rate Limit Respect**: Automatic rate limiting for external API calls
 - **Connection Security**: TLS encryption for all external API communications
 - **Audit Logging**: Complete logging of all external API calls and responses
 
 ### Regulatory Compliance
+
 - **Audit Trail**: Complete audit trail of all risk decisions and compliance actions
 - **Data Retention**: Configurable data retention policies for compliance requirements
 - **Reporting**: Automated generation of regulatory risk reports
@@ -1002,6 +1039,7 @@ healthcheck:
 For comprehensive development environment setup, see [Development Setup Guide](../project-plan/DEVELOPMENT_SETUP.md).
 
 ### Quick Start
+
 ```bash
 # Activate conda environment
 conda activate py313_trading_ecosystem_dev
@@ -1017,6 +1055,7 @@ uvicorn risk_monitor.main:app --reload --host 0.0.0.0 --port 8084
 ```
 
 ### Environment Verification
+
 ```bash
 # Run environment verification script
 python ../project-plan/scripts/verify_setup.py
@@ -1025,12 +1064,14 @@ python ../project-plan/scripts/verify_setup.py
 ## 🚀 Performance
 
 ### Benchmarks
+
 - **Risk Calculation Latency**: <100ms for complete portfolio risk assessment
 - **Alert Generation**: <50ms from breach detection to alert routing
 - **Dashboard Updates**: <5 second end-to-end risk data refresh
 - **External API Response**: <2 seconds for all venue data aggregation
 
 ### Resource Usage
+
 - **Memory**: ~300MB baseline + ~50MB per monitored venue
 - **CPU**: <30% single core under normal monitoring load
 - **Network**: <5MB/hour external API calls
@@ -1039,6 +1080,7 @@ python ../project-plan/scripts/verify_setup.py
 ## 🤝 Contributing
 
 ### Development Guidelines
+
 1. Maintain production-realistic constraints (external API access only)
 2. Ensure all risk calculations are auditable and explainable
 3. Add comprehensive logging for compliance requirements
@@ -1046,6 +1088,7 @@ python ../project-plan/scripts/verify_setup.py
 5. Document all compliance signals and their meanings
 
 ### Adding New Risk Metrics
+
 1. Implement calculation logic with proper error  RiskMetricsCalculator
 2. Add corresponding alert logic in ComplianceEngine
 3. Update dashboard visualization components
@@ -1053,6 +1096,7 @@ python ../project-plan/scripts/verify_setup.py
 5. Include comprehensive unit and integration tests
 
 ## 📚 References
+
 - **Risk Management Standards**: [Link to institutional risk management practices]
 - **Regulatory Requirements**: [Link to compliance documentation]
 - **API Integration Guide**: [Link to exchange/custodian API documentation]
