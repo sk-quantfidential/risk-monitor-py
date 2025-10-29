@@ -161,11 +161,8 @@
 # docs/api/**
 # docs/reference/**
 
-## Project-Specific Exceptions
-
-# Environment configuration directory
-# Contains sensitive data and environment-specific configs that shouldn't be validated
-.venv/**
-.venv/
-
 # End of template
+
+# Python virtual environment
+.venv/**
+venv/**
