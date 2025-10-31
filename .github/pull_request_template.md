@@ -106,6 +106,7 @@ Include commands run and results observed.
 -->
 
 - [ ] **Unit Tests**: [What was tested, results]
+
   ```bash
   # Command run
   npm test
@@ -115,6 +116,7 @@ Include commands run and results observed.
   ```
 
 - [ ] **Integration Tests**: [What was tested, results]
+
   ```bash
   # Command run
   npm run test:integration
@@ -164,6 +166,7 @@ If not a breaking change, write "None"
 **Details**: [What breaks and why]
 
 **Migration Guide**:
+
 ```bash
 # Steps to update for this change
 # 1. ...
@@ -214,10 +217,12 @@ If no security implications, write "No security impact"
 **Security Impact**: [None/Low/Medium/High]
 
 **Details**:
+
 - [Security consideration 1]
 - [Security consideration 2]
 
 **Mitigations**:
+
 - [How security concerns are addressed]
 
 ## Dependencies
@@ -249,6 +254,7 @@ Be specific - what commands, what steps.
 -->
 
 **Rollback Steps**:
+
 1. [Step to revert deployment]
 2. [Step to restore previous state]
 3. [Step to verify rollback successful]
@@ -297,13 +303,16 @@ Are there specific concerns you want feedback on?
 -->
 
 **Focus Areas**:
+
 - [Area of code that needs careful review]
 - [Design decision you want feedback on]
 
 **Known Issues**:
+
 - [Issue you're aware of but haven't addressed yet]
 
 **Follow-up Work**:
+
 - [Work that will be done in a future PR]
 
 ## Checklist
@@ -336,11 +345,13 @@ Delete this section if not needed.
 -->
 
 **References**:
+
 - [Link to design document]
 - [Link to discussion/RFC]
 - [Link to research/investigation]
 
 **Alternative Approaches Considered**:
+
 - [Approach 1 and why it wasn't chosen]
 - [Approach 2 and why it wasn't chosen]
 
