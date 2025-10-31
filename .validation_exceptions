@@ -166,3 +166,7 @@
 # Python virtual environment
 .venv/**
 venv/**
+.venv
+
+# Standardized CONTRIBUTING.md template (minor markdown style variations)
+CONTRIBUTING.md

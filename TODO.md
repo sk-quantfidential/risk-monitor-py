@@ -2,6 +2,27 @@
 
 > **Note**: Completed milestones are archived in [TODO-HISTORY.md](./TODO-HISTORY.md). This file tracks active and future work.
 
+## 🛠️ Milestone: TSE-0001.Foundation - Git Quality Standards
+
+**Status**: ✅ **COMPLETED**
+**Goal**: Standardize validation scripts and git workflows across ecosystem
+**Priority**: Foundation
+**Completed**: 2025-10-31
+
+### Completed Tasks
+
+- [x] Standardized validate-all.sh across all repositories
+- [x] Replaced symlinks with actual file copies for better portability
+- [x] Removed deprecated validate-repository.sh files
+- [x] Implemented simplified PR documentation matching (exact branch name with slash-to-dash conversion)
+- [x] Added TODO.md OR TODO-MASTER.md validation check
+- [x] Ensured identical scripts in both scripts/ and .claude/plugins/ directories
+- [x] Added markdownlint configuration and GitHub Actions workflows
+- [x] Archived completed milestones to TODO-HISTORY.md
+- [x] Standardized git quality standards plugin structure
+
+---
+
 ## epic-TSE-0001: Foundation Services & Infrastructure
 
 ### 🏗️ Milestone TSE-0001.1b: Python Services Bootstrapping
